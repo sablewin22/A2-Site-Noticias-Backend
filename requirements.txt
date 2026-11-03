@@ -1,0 +1,9 @@
+feedparser
+requests
+googlenewsdecoder
+trafilatura
+sentence-transformers
+numpy
+scipy
+pillow
+typesafe-sdk

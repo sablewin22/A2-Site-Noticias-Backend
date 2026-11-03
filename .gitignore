@@ -1,0 +1,22 @@
+# Ambiente Python (cada pessoa cria o seu)
+.venv/
+venv/
+__pycache__/
+
+# Dados: grandes demais para o GitHub e contêm textos dos portais
+*.db
+*.db-journal
+embeddings.npz
+*.zip
+
+# Fotos dos portais (direitos dos veículos)
+capas.json
+*.webp
+
+# Chave de API: NUNCA enviar
+.typesafe_key
+
+# Arquivos de trabalho
+*.log
+*.csv
+diagnostico.html

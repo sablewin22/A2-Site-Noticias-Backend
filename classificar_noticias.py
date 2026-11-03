@@ -104,6 +104,17 @@ DIMENSOES = {
         },
         "precisa_texto": True,
     },
+    "vies_politico": {
+        "nome": "Viés político",
+        "instrucoes": ("Considerando a manchete e o texto, qual é o viés político predominante "
+                       "no enquadramento, nas fontes ouvidas e na linguagem desta notícia?"),
+        "criterios": {
+            "esquerda": "Enquadramento, fontes ou vocabulário alinhados a pautas e atores da esquerda.",
+            "neutro": "Tratamento factual, institucional ou com contraponto equilibrado entre lados.",
+            "direita": "Enquadramento, fontes ou vocabulário alinhados a pautas e atores da direita.",
+        },
+        "precisa_texto": True,
+    },
     "tema": {
         "nome": "Tema principal",
         "instrucoes": ("Qual é o assunto PRINCIPAL desta notícia? Escolha um só, mesmo que "
@@ -173,6 +184,10 @@ def preparar_tabela(con):
         if d not in existentes:
             con.execute(f"ALTER TABLE classificacoes ADD COLUMN {d} TEXT")
             con.execute(f"ALTER TABLE classificacoes ADD COLUMN {d}_confianca REAL")
+    try:
+        con.execute("ALTER TABLE classificacoes ADD COLUMN justificativa TEXT")
+    except Exception:
+        pass
     con.commit()
 
 
@@ -203,6 +218,86 @@ def pendentes(con, limite, portal, min_portais=3):
 
 
 # ------------------------------------------------------------- Jev
+
+ARQ_CHAVE_GEMINI = ".gemini_key"
+MODELO_GEMINI = "gemini-3.5-flash-lite"
+
+def carregar_chave_gemini():
+    if os.environ.get("GEMINI_API_KEY"):
+        return os.environ["GEMINI_API_KEY"]
+    if os.path.exists(ARQ_CHAVE_GEMINI):
+        with open(ARQ_CHAVE_GEMINI, encoding="utf-8") as f:
+            chave = f.read().strip()
+            os.environ["GEMINI_API_KEY"] = chave
+            return chave
+    return None
+
+def classificar_uma_gemini(api_key, titulo, texto, n_palavras):
+    import requests
+    so_manchete = (n_palavras or 0) < MIN_PALAVRAS or not texto
+    
+    instrucoes_dimensoes = []
+    for k, d in DIMENSOES.items():
+        if so_manchete and d["precisa_texto"]:
+            continue
+        opcoes = ", ".join(d["criterios"].keys())
+        instrucoes_dimensoes.append(f"- {k}: {opcoes}")
+
+    prompt = f"""Você é um classificador rigoroso de notícias da imprensa brasileira.
+Analise a notícia abaixo e classifique estritamente nos critérios definidos:
+{chr(10).join(instrucoes_dimensoes)}
+
+Para cada critério, forneça também sua taxa de confiança matemática (de 0.00 a 1.00).
+Forneça uma breve justificativa de 1 frase.
+Responda EXCLUSIVAMENTE em formato JSON com o seguinte formato:
+{{
+"""
+    campos_json = []
+    for k in DIMENSOES:
+        if not (so_manchete and DIMENSOES[k]["precisa_texto"]):
+            campos_json.append(f'  "{k}": "...", "{k}_confianca": 0.95')
+    campos_json.append('  "justificativa": "..."')
+    prompt += ",\n".join(campos_json) + "\n}\n\nNotícia:\nTítulo: " + titulo + "\n"
+    if not so_manchete and texto:
+        prompt += "Texto: " + texto[:MAX_CARACTERES] + "\n"
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODELO_GEMINI}:generateContent?key={api_key}"
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"response_mime_type": "application/json"}
+    }
+
+    for tentativa in range(1, 6):
+        try:
+            resp = requests.post(url, json=payload, timeout=30)
+            if resp.status_code == 200:
+                raw_text = resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+                dados = json.loads(raw_text)
+                resultado = {
+                    "texto_insuficiente": 1 if so_manchete else 0,
+                    "modelo": MODELO_GEMINI,
+                    "justificativa": dados.get("justificativa", "")
+                }
+                probs = {}
+                for k in DIMENSOES:
+                    if k in dados:
+                        resultado[k] = str(dados[k]).strip().lower()
+                        resultado[f"{k}_confianca"] = round(float(dados.get(f"{k}_confianca", 0.85)), 4)
+                        probs[k] = {resultado[k]: resultado[f"{k}_confianca"]}
+                resultado["probabilidades"] = json.dumps(probs, ensure_ascii=False)
+                resultado["revisar"] = int(any(resultado.get(f"{c}_confianca", 1.0) < CONFIANCA_BAIXA for c in DIMENSOES if f"{c}_confianca" in resultado))
+                return resultado
+            elif resp.status_code in (429, 503):
+                time.sleep(2 * tentativa)
+            else:
+                raise RuntimeError(f"Erro Gemini {resp.status_code}: {resp.text[:200]}")
+        except Exception as e:
+            if tentativa == 5:
+                raise e
+            time.sleep(2 * tentativa)
+    raise RuntimeError("Falha após 5 tentativas com o Gemini.")
+
+
 def montar_perguntas(Choice, so_manchete: bool):
     return {
         chave: Choice(instructions=d["instrucoes"], criteria=d["criterios"])
@@ -260,18 +355,58 @@ def gravar(con, noticia_id, res):
     )
 
 
-def executar(con, limite, portal, trabalhadores, min_portais=3):
+def executar(con, limite, portal, trabalhadores, min_portais=3, engine="auto"):
+    chave_gemini = carregar_chave_gemini()
+    usar_gemini = (engine == "gemini") or (engine == "auto" and chave_gemini is not None)
+
+    linhas = pendentes(con, limite, portal, min_portais)
+    if not linhas:
+        print("Nenhuma notícia pendente.")
+        return
+
+    if usar_gemini:
+        if not chave_gemini:
+            raise SystemExit("Chave do Gemini não encontrada em .gemini_key ou GEMINI_API_KEY.")
+        log.info("Classificando %d notícias usando Google Gemini (%s) com %d workers...",
+                 len(linhas), MODELO_GEMINI, min(trabalhadores, 4))
+        
+        feitos = erros = curtos = 0
+        with ThreadPoolExecutor(min(trabalhadores, 4)) as pool:
+            futuros = {
+                pool.submit(classificar_uma_gemini, chave_gemini, titulo, texto, n): id_
+                for id_, _portal, titulo, texto, n in linhas
+            }
+            try:
+                for futuro in as_completed(futuros):
+                    id_ = futuros[futuro]
+                    try:
+                        res = futuro.result()
+                        curtos += res.get("texto_insuficiente", 0)
+                    except Exception as e:
+                        nome = type(e).__name__
+                        res = {"erro": f"{nome}: {e}"[:300]}
+                        erros += 1
+                    gravar(con, id_, res)
+                    feitos += 1
+                    if feitos % 10 == 0 or feitos == len(linhas):
+                        con.commit()
+                        log.info("[%d/%d] concluídas | erros: %d | só manchete: %d",
+                                 feitos, len(linhas), erros, curtos)
+            except KeyboardInterrupt:
+                log.info("Interrompido. O que já foi classificado está salvo.")
+                pool.shutdown(cancel_futures=True)
+            finally:
+                con.commit()
+        return
+
+    # Fallback para Jev
     try:
         from typesafe_sdk import Choice, TypeSafeClient, TypeSafeRateLimitError
     except ImportError:
         raise SystemExit("Instale com: pip install typesafe-sdk")
     carregar_chave()
 
-    linhas = pendentes(con, limite, portal, min_portais)
-    if not linhas:
-        print("Nenhuma notícia pendente.")
-        return
-    log.info("Classificando %d notícias com %d requisições em paralelo...",
+    log.info("Classificando %d notícias com Jev (TypeSafe) em %d requisições...",
              len(linhas), trabalhadores)
 
     feitos = erros = curtos = 0
@@ -460,6 +595,7 @@ def main():
     ap.add_argument("--db", default="noticias.db")
     ap.add_argument("--limite", type=int, help="quantas notícias classificar")
     ap.add_argument("--portal", help="classifica só este portal")
+    ap.add_argument("--engine", choices=["auto", "gemini", "jev"], default="auto", help="motor de IA (padrão: auto/gemini)")
     ap.add_argument("--paralelo", type=int, default=TRABALHADORES,
                     help=f"requisições ao mesmo tempo (padrão {TRABALHADORES})")
     ap.add_argument("--salvar-chave", action="store_true", help="guarda a chave do Jev")
@@ -504,7 +640,7 @@ def main():
     elif args.avaliar:
         avaliar(con, args.avaliar)
     else:
-        executar(con, args.limite, args.portal, args.paralelo, args.min_portais)
+        executar(con, args.limite, args.portal, args.paralelo, args.min_portais, args.engine)
 
 
 if __name__ == "__main__":

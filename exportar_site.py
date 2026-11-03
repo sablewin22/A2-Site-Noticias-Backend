@@ -49,6 +49,7 @@ CRITERIOS = {
     "tom_manchete": ("tom", ["negativo", "neutro", "positivo"]),
     "profundidade": ("prof", ["superficial", "intermediaria", "aprofundada"]),
     "postura": ("postura", ["a_favor", "neutra", "contra"]),
+    "vies_politico": ("vies", ["esquerda", "neutro", "direita"]),
 }
 TAM_TRECHO = 200
 # Crédito no começo do texto da Agência Brasil:

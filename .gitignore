@@ -3,22 +3,21 @@
 venv/
 __pycache__/
 
-# Dados: grandes demais para o GitHub e contêm textos dos portais
+# Banco e vetores: ficam no release "dados", não no código
+# (são grandes e guardam os textos completos das matérias)
 *.db
 *.db-journal
 embeddings.npz
 *.zip
 
-# Fotos dos portais (direitos dos veículos)
-capas.json
-*.webp
-
-# Chave de API: NUNCA enviar
-.typesafe_key
+# Chaves de API: NUNCA enviar
 .gemini_key
+.typesafe_key
 .env
 
 # Arquivos de trabalho
 *.log
 *.csv
 diagnostico.html
+/capas/
+/pacote_classificacao/

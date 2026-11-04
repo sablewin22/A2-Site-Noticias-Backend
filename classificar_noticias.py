@@ -1,37 +1,41 @@
 #!/usr/bin/env python3
 """
-Classifica as notícias com o Jev (TypeSafe), um modelo que só escolhe rótulos,
-sem gerar texto. Lê e grava no mesmo noticias.db.
+Classifica as notícias com o Google Gemini. Lê e grava no mesmo noticias.db.
 
-Dimensões (4 perguntas por notícia, feitas de uma vez):
+Critérios (perguntados de uma vez, com resposta presa aos rótulos definidos):
 - Tipo de conteúdo: informativa / analitica / opinativa          (título + texto)
 - Tom da manchete:  negativo / neutro / positivo                 (só o título)
 - Profundidade:     superficial / intermediaria / aprofundada    (título + texto)
 - Postura:          a_favor / neutra / contra                    (título + texto)
-- Tema principal:   um dos 7 temas da coleta                       (título + texto)
-  Cada acontecimento (grupo) fica com o tema da maioria das suas notícias.
+- Viés político:    esquerda / neutro / direita                  (título + texto)
+- Tema principal:   um dos 7 temas da coleta                     (título + texto)
+
+Para cada critério o modelo também informa uma confiança de 0 a 1 (é a própria
+avaliação do modelo, não uma probabilidade medida) e uma justificativa de uma
+frase. Confiança abaixo de 0,5 marca a notícia para revisão.
 
 Notícias com texto curto (menos de 80 palavras, ex.: matérias em vídeo)
-recebem só o tom da manchete; as outras dimensões ficam vazias e a notícia é
+recebem só o tom da manchete e o tema; o resto fica vazio e a notícia é
 marcada como texto_insuficiente.
 
 Instalação:
-    pip install typesafe-sdk
+    pip install requests
 
-Chave de API (crie em console.typesafe.ai). Guarde num arquivo, uma vez só:
+Chave de API (crie em aistudio.google.com/apikey). Guarde num arquivo, uma vez só:
     python classificar_noticias.py --salvar-chave
+(ou defina a variável de ambiente GEMINI_API_KEY)
 
 Por padrão classifica só as notícias dos acontecimentos com 3+ portais (os que
 aparecem no site). Use --min-portais 2 para incluir também os de 2 portais.
 
 O tema de cada acontecimento continua sendo o do vocabulário (definir_temas.py).
-O tema principal que o Jev escolhe fica guardado; para usá-lo no lugar do
+O tema principal que o Gemini escolhe fica guardado; para usá-lo no lugar do
 vocabulário, rode --temas-grupos depois de classificar tudo.
 
 Uso:
+    python classificar_noticias.py --estimativa      # quantas faltam, sem chamar o Gemini
     python classificar_noticias.py --limite 30       # teste
     python classificar_noticias.py                   # todas as pendentes
-    python classificar_noticias.py --estimativa      # quantas faltam, sem gastar crédito
     python classificar_noticias.py --stats           # distribuição por portal
     python classificar_noticias.py --exemplos 10     # mostra 10 classificações
     python classificar_noticias.py --validacao 200   # planilha para anotar à mão
@@ -51,11 +55,17 @@ from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 
-ARQ_CHAVE = ".typesafe_key"
+try:
+    import requests
+except ImportError:
+    raise SystemExit("Instale com: pip install requests")
+
+ARQ_CHAVE = ".gemini_key"
+MODELO = os.environ.get("GEMINI_MODELO", "gemini-3.5-flash-lite")
 MAX_CARACTERES = 6000      # ~1.500 tokens de texto por notícia
 MIN_PALAVRAS = 80          # abaixo disso: só o tom da manchete
 CONFIANCA_BAIXA = 0.5      # abaixo disso a classificação é marcada para revisão
-TRABALHADORES = 6          # requisições em paralelo
+TRABALHADORES = 4          # requisições em paralelo
 
 # ------------------------------------------------------------- perguntas
 # As descrições são as definições do projeto. Mudar aqui muda a classificação.
@@ -138,23 +148,22 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 log = logging.getLogger("classificar")
-for barulhento in ("httpx", "httpcore", "typesafe_sdk"):
+for barulhento in ("urllib3",):
     logging.getLogger(barulhento).setLevel(logging.WARNING)
 
 
 # ------------------------------------------------------------- chave
 def carregar_chave():
-    if os.environ.get("TYPESAFE_API_KEY"):
-        return
+    if os.environ.get("GEMINI_API_KEY"):
+        return os.environ["GEMINI_API_KEY"].strip()
     if os.path.exists(ARQ_CHAVE):
         with open(ARQ_CHAVE, encoding="utf-8") as f:
-            os.environ["TYPESAFE_API_KEY"] = f.read().strip()
-        return
+            return f.read().strip()
     raise SystemExit("Chave não encontrada. Rode: python classificar_noticias.py --salvar-chave")
 
 
 def salvar_chave():
-    chave = getpass.getpass("Cole a chave do Jev e aperte Enter (ela não aparece na tela): ")
+    chave = getpass.getpass("Cole a chave do Gemini e aperte Enter (ela não aparece na tela): ")
     if not chave.strip():
         raise SystemExit("Nenhuma chave digitada.")
     with open(ARQ_CHAVE, "w", encoding="utf-8") as f:
@@ -217,129 +226,103 @@ def pendentes(con, limite, portal, min_portais=3):
     return con.execute(sql, params).fetchall()
 
 
-# ------------------------------------------------------------- Jev
-
-ARQ_CHAVE_GEMINI = ".gemini_key"
-MODELO_GEMINI = "gemini-3.5-flash-lite"
-
-def carregar_chave_gemini():
-    if os.environ.get("GEMINI_API_KEY"):
-        return os.environ["GEMINI_API_KEY"]
-    if os.path.exists(ARQ_CHAVE_GEMINI):
-        with open(ARQ_CHAVE_GEMINI, encoding="utf-8") as f:
-            chave = f.read().strip()
-            os.environ["GEMINI_API_KEY"] = chave
-            return chave
-    return None
-
-def classificar_uma_gemini(api_key, titulo, texto, n_palavras):
-    import requests
-    so_manchete = (n_palavras or 0) < MIN_PALAVRAS or not texto
-    
-    instrucoes_dimensoes = []
-    for k, d in DIMENSOES.items():
+# ------------------------------------------------------------- Gemini
+def esquema(so_manchete: bool) -> dict:
+    """Formato da resposta. Cada critério só aceita os rótulos definidos (enum),
+    então o Gemini não consegue responder fora da lista."""
+    props, obrig = {}, []
+    for chave, d in DIMENSOES.items():
         if so_manchete and d["precisa_texto"]:
             continue
-        opcoes = ", ".join(d["criterios"].keys())
-        instrucoes_dimensoes.append(f"- {k}: {opcoes}")
-
-    prompt = f"""Você é um classificador rigoroso de notícias da imprensa brasileira.
-Analise a notícia abaixo e classifique estritamente nos critérios definidos:
-{chr(10).join(instrucoes_dimensoes)}
-
-Para cada critério, forneça também sua taxa de confiança matemática (de 0.00 a 1.00).
-Forneça uma breve justificativa de 1 frase.
-Responda EXCLUSIVAMENTE em formato JSON com o seguinte formato:
-{{
-"""
-    campos_json = []
-    for k in DIMENSOES:
-        if not (so_manchete and DIMENSOES[k]["precisa_texto"]):
-            campos_json.append(f'  "{k}": "...", "{k}_confianca": 0.95')
-    campos_json.append('  "justificativa": "..."')
-    prompt += ",\n".join(campos_json) + "\n}\n\nNotícia:\nTítulo: " + titulo + "\n"
-    if not so_manchete and texto:
-        prompt += "Texto: " + texto[:MAX_CARACTERES] + "\n"
-
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODELO_GEMINI}:generateContent?key={api_key}"
-    payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"response_mime_type": "application/json"}
-    }
-
-    for tentativa in range(1, 6):
-        try:
-            resp = requests.post(url, json=payload, timeout=30)
-            if resp.status_code == 200:
-                raw_text = resp.json()["candidates"][0]["content"]["parts"][0]["text"]
-                dados = json.loads(raw_text)
-                resultado = {
-                    "texto_insuficiente": 1 if so_manchete else 0,
-                    "modelo": MODELO_GEMINI,
-                    "justificativa": dados.get("justificativa", "")
-                }
-                probs = {}
-                for k in DIMENSOES:
-                    if k in dados:
-                        resultado[k] = str(dados[k]).strip().lower()
-                        resultado[f"{k}_confianca"] = round(float(dados.get(f"{k}_confianca", 0.85)), 4)
-                        probs[k] = {resultado[k]: resultado[f"{k}_confianca"]}
-                resultado["probabilidades"] = json.dumps(probs, ensure_ascii=False)
-                resultado["revisar"] = int(any(resultado.get(f"{c}_confianca", 1.0) < CONFIANCA_BAIXA for c in DIMENSOES if f"{c}_confianca" in resultado))
-                return resultado
-            elif resp.status_code in (429, 503):
-                time.sleep(2 * tentativa)
-            else:
-                raise RuntimeError(f"Erro Gemini {resp.status_code}: {resp.text[:200]}")
-        except Exception as e:
-            if tentativa == 5:
-                raise e
-            time.sleep(2 * tentativa)
-    raise RuntimeError("Falha após 5 tentativas com o Gemini.")
+        props[chave] = {"type": "STRING", "enum": list(d["criterios"])}
+        props[f"{chave}_confianca"] = {"type": "NUMBER"}
+        obrig += [chave, f"{chave}_confianca"]
+    props["justificativa"] = {"type": "STRING"}
+    obrig.append("justificativa")
+    return {"type": "OBJECT", "properties": props, "required": obrig,
+            "propertyOrdering": obrig}
 
 
-def montar_perguntas(Choice, so_manchete: bool):
-    return {
-        chave: Choice(instructions=d["instrucoes"], criteria=d["criterios"])
-        for chave, d in DIMENSOES.items()
-        if not (so_manchete and d["precisa_texto"])
-    }
-
-
-def respostas_do(resp):
-    # versões novas do SDK usam .answers; as antigas, .choices
-    return getattr(resp, "answers", None) or getattr(resp, "choices", None) or {}
-
-
-def classificar_uma(client, Choice, erro_limite, titulo, texto, n_palavras):
-    so_manchete = (n_palavras or 0) < MIN_PALAVRAS or not texto
-    estado = {"manchete": titulo}
+def montar_prompt(titulo, texto, so_manchete: bool) -> str:
+    partes = ["Você classifica notícias da imprensa brasileira. Responda cada critério "
+              "escolhendo um dos rótulos, de acordo com as definições.\n"]
+    for chave, d in DIMENSOES.items():
+        if so_manchete and d["precisa_texto"]:
+            continue
+        partes.append(f"## {chave} ({d['nome']})\n{d['instrucoes']}")
+        partes += [f"- {rotulo}: {definicao}" for rotulo, definicao in d["criterios"].items()]
+        partes.append("")
+    partes.append("Para cada critério, informe em <criterio>_confianca um número de 0 a 1 "
+                  "indicando o quanto a escolha é clara (1 = sem dúvida). "
+                  "Em justificativa, explique a classificação em uma frase.\n")
+    partes.append(f"Manchete: {titulo}")
     if not so_manchete:
-        estado["texto"] = texto[:MAX_CARACTERES]
-    perguntas = montar_perguntas(Choice, so_manchete)
+        partes.append(f"Texto: {texto[:MAX_CARACTERES]}")
+    return "\n".join(partes)
 
+
+class ErroChave(Exception):
+    pass
+
+
+def classificar_uma(chave_api, titulo, texto, n_palavras):
+    so_manchete = (n_palavras or 0) < MIN_PALAVRAS or not texto
+    corpo = {
+        "contents": [{"parts": [{"text": montar_prompt(titulo, texto, so_manchete)}]}],
+        "generationConfig": {
+            "temperature": 0,
+            "responseMimeType": "application/json",
+            "responseSchema": esquema(so_manchete),
+        },
+    }
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{MODELO}:generateContent"
+    # a chave vai no cabeçalho, não no link, para não aparecer em logs e mensagens de erro
+    cabecalho = {"x-goog-api-key": chave_api, "Content-Type": "application/json"}
+
+    ultimo = None
     for tentativa in range(1, 6):
         try:
-            resp = client.system_one(state=estado, questions=perguntas)
+            resp = requests.post(url, headers=cabecalho, json=corpo, timeout=60)
+        except requests.RequestException as e:
+            ultimo = f"conexão: {e}"
+            time.sleep(2 * tentativa)
+            continue
+        if resp.status_code in (401, 403):
+            raise ErroChave(resp.text[:200])
+        if resp.status_code == 400 and "API key" in resp.text:
+            raise ErroChave(resp.text[:200])
+        if resp.status_code in (429, 500, 502, 503, 504):
+            ultimo = f"HTTP {resp.status_code}"
+            time.sleep(min(60, 5 * tentativa))
+            continue
+        if resp.status_code != 200:
+            raise RuntimeError(f"Gemini HTTP {resp.status_code}: {resp.text[:200]}")
+        try:
+            dados = json.loads(resp.json()["candidates"][0]["content"]["parts"][0]["text"])
             break
-        except erro_limite as e:
-            espera = (getattr(e, "retry_after_ms", None) or 2000 * tentativa) / 1000
-            time.sleep(espera)
+        except (KeyError, IndexError, ValueError) as e:
+            ultimo = f"resposta inesperada: {e}"
+            time.sleep(2)
     else:
-        raise RuntimeError("limite de requisições excedido 5 vezes seguidas")
+        raise RuntimeError(f"Gemini falhou 5 vezes seguidas ({ultimo})")
 
-    respostas = respostas_do(resp)
-    resultado = {"texto_insuficiente": 1 if so_manchete else 0,
-                 "modelo": getattr(resp, "model", None)}
-    probs = {}
-    for chave in perguntas:
-        r = respostas[chave]
-        resultado[chave] = r.choice
-        resultado[f"{chave}_confianca"] = round(float(r.confidence), 4)
-        probs[chave] = {k: round(float(v), 4) for k, v in r.probabilities.items()}
-    resultado["probabilidades"] = json.dumps(probs, ensure_ascii=False)
-    resultado["revisar"] = int(any(resultado[f"{c}_confianca"] < CONFIANCA_BAIXA
-                                   for c in perguntas))
+    resultado = {"texto_insuficiente": 1 if so_manchete else 0, "modelo": MODELO,
+                 "justificativa": str(dados.get("justificativa", ""))[:500]}
+    for chave, d in DIMENSOES.items():
+        if so_manchete and d["precisa_texto"]:
+            continue
+        rotulo = str(dados.get(chave, "")).strip()
+        if rotulo not in d["criterios"]:
+            raise RuntimeError(f"rótulo inválido em {chave}: {rotulo!r}")
+        try:
+            conf = min(1.0, max(0.0, float(dados.get(f"{chave}_confianca"))))
+        except (TypeError, ValueError):
+            conf = None
+        resultado[chave] = rotulo
+        resultado[f"{chave}_confianca"] = None if conf is None else round(conf, 4)
+    resultado["revisar"] = int(any(
+        (resultado.get(f"{c}_confianca") or 0) < CONFIANCA_BAIXA
+        for c in DIMENSOES if c in resultado))
     return resultado
 
 
@@ -355,79 +338,31 @@ def gravar(con, noticia_id, res):
     )
 
 
-def executar(con, limite, portal, trabalhadores, min_portais=3, engine="auto"):
-    chave_gemini = carregar_chave_gemini()
-    usar_gemini = (engine == "gemini") or (engine == "auto" and chave_gemini is not None)
-
+def executar(con, limite, portal, trabalhadores, min_portais=3):
+    chave_api = carregar_chave()
     linhas = pendentes(con, limite, portal, min_portais)
     if not linhas:
         print("Nenhuma notícia pendente.")
         return
-
-    if usar_gemini:
-        if not chave_gemini:
-            raise SystemExit("Chave do Gemini não encontrada em .gemini_key ou GEMINI_API_KEY.")
-        log.info("Classificando %d notícias usando Google Gemini (%s) com %d workers...",
-                 len(linhas), MODELO_GEMINI, min(trabalhadores, 4))
-        
-        feitos = erros = curtos = 0
-        with ThreadPoolExecutor(min(trabalhadores, 4)) as pool:
-            futuros = {
-                pool.submit(classificar_uma_gemini, chave_gemini, titulo, texto, n): id_
-                for id_, _portal, titulo, texto, n in linhas
-            }
-            try:
-                for futuro in as_completed(futuros):
-                    id_ = futuros[futuro]
-                    try:
-                        res = futuro.result()
-                        curtos += res.get("texto_insuficiente", 0)
-                    except Exception as e:
-                        nome = type(e).__name__
-                        res = {"erro": f"{nome}: {e}"[:300]}
-                        erros += 1
-                    gravar(con, id_, res)
-                    feitos += 1
-                    if feitos % 10 == 0 or feitos == len(linhas):
-                        con.commit()
-                        log.info("[%d/%d] concluídas | erros: %d | só manchete: %d",
-                                 feitos, len(linhas), erros, curtos)
-            except KeyboardInterrupt:
-                log.info("Interrompido. O que já foi classificado está salvo.")
-                pool.shutdown(cancel_futures=True)
-            finally:
-                con.commit()
-        return
-
-    # Fallback para Jev
-    try:
-        from typesafe_sdk import Choice, TypeSafeClient, TypeSafeRateLimitError
-    except ImportError:
-        raise SystemExit("Instale com: pip install typesafe-sdk")
-    carregar_chave()
-
-    log.info("Classificando %d notícias com Jev (TypeSafe) em %d requisições...",
-             len(linhas), trabalhadores)
+    log.info("Classificando %d notícias com o %s, %d requisições em paralelo...",
+             len(linhas), MODELO, trabalhadores)
 
     feitos = erros = curtos = 0
-    with TypeSafeClient() as client, ThreadPoolExecutor(trabalhadores) as pool:
-        futuros = {
-            pool.submit(classificar_uma, client, Choice, TypeSafeRateLimitError,
-                        titulo, texto, n): id_
-            for id_, _portal, titulo, texto, n in linhas
-        }
+    with ThreadPoolExecutor(trabalhadores) as pool:
+        futuros = {pool.submit(classificar_uma, chave_api, titulo, texto, n): id_
+                   for id_, _portal, titulo, texto, n in linhas}
         try:
             for futuro in as_completed(futuros):
                 id_ = futuros[futuro]
                 try:
                     res = futuro.result()
                     curtos += res["texto_insuficiente"]
+                except ErroChave:
+                    pool.shutdown(cancel_futures=True)
+                    raise SystemExit("Chave do Gemini inválida ou sem permissão. Rode de novo: "
+                                     "python classificar_noticias.py --salvar-chave")
                 except Exception as e:
-                    nome = type(e).__name__
-                    if "Authentication" in nome:
-                        raise SystemExit("Chave inválida. Rode de novo: "
-                                         "python classificar_noticias.py --salvar-chave")
-                    res = {"erro": f"{nome}: {e}"[:300]}
+                    res = {"erro": f"{type(e).__name__}: {e}"[:300]}
                     erros += 1
                 gravar(con, id_, res)
                 feitos += 1
@@ -476,7 +411,7 @@ def tema_dos_grupos(con):
 
 
 def gravar_tema_dos_grupos(con):
-    """Troca o tema do vocabulário pelo tema principal do Jev, só nos
+    """Troca o tema do vocabulário pelo tema principal do Gemini, só nos
     acontecimentos que já têm notícias classificadas. Os outros mantêm o tema
     do vocabulário."""
     con.execute("""CREATE TABLE IF NOT EXISTS grupo_tema (
@@ -526,16 +461,20 @@ def mostrar_exemplos(con, quantos):
     linhas = con.execute(
         f"""SELECT n.portal, n.titulo, c.tipo, c.tom_manchete, c.profundidade, c.postura,
                    c.tipo_confianca, c.tom_manchete_confianca,
-                   c.profundidade_confianca, c.postura_confianca, c.tema, c.tema_confianca
+                   c.profundidade_confianca, c.postura_confianca, c.tema, c.tema_confianca,
+                   c.vies_politico, c.vies_politico_confianca, c.justificativa
             FROM classificacoes c JOIN noticias n ON n.id = c.noticia_id
             WHERE c.erro IS NULL ORDER BY RANDOM() LIMIT ?""", (quantos,)).fetchall()
-    for portal, titulo, tipo, tom, prof, post, ct, cm, cp, cs, tema, ctm in linhas:
+    for (portal, titulo, tipo, tom, prof, post, ct, cm, cp, cs, tema, ctm,
+         vies, cv, just) in linhas:
         def f(v, c):
             return f"{v} ({c:.2f})" if v else "—"
         print(f"\n[{portal}] {titulo}")
         print(f"  tipo: {f(tipo, ct or 0)} | manchete: {f(tom, cm or 0)} | "
               f"profundidade: {f(prof, cp or 0)} | postura: {f(post, cs or 0)}")
-        print(f"  tema principal: {f(tema, ctm or 0)}")
+        print(f"  viés político: {f(vies, cv or 0)} | tema principal: {f(tema, ctm or 0)}")
+        if just:
+            print(f"  justificativa: {just}")
     print()
 
 
@@ -591,14 +530,14 @@ def avaliar(con, arquivo):
 
 # ------------------------------------------------------------- main
 def main():
-    ap = argparse.ArgumentParser(description="Classifica notícias com o Jev")
+    ap = argparse.ArgumentParser(description="Classifica notícias com o Gemini")
     ap.add_argument("--db", default="noticias.db")
     ap.add_argument("--limite", type=int, help="quantas notícias classificar")
     ap.add_argument("--portal", help="classifica só este portal")
-    ap.add_argument("--engine", choices=["auto", "gemini", "jev"], default="auto", help="motor de IA (padrão: auto/gemini)")
+    ap.add_argument("--engine", choices=["gemini"], default="gemini", help=argparse.SUPPRESS)
     ap.add_argument("--paralelo", type=int, default=TRABALHADORES,
                     help=f"requisições ao mesmo tempo (padrão {TRABALHADORES})")
-    ap.add_argument("--salvar-chave", action="store_true", help="guarda a chave do Jev")
+    ap.add_argument("--salvar-chave", action="store_true", help="guarda a chave do Gemini")
     ap.add_argument("--stats", action="store_true", help="distribuição dos rótulos por portal")
     ap.add_argument("--exemplos", type=int, metavar="N", help="mostra N classificações")
     ap.add_argument("--validacao", type=int, metavar="N",
@@ -609,7 +548,7 @@ def main():
     ap.add_argument("--min-portais", type=int, default=3,
                     help="só acontecimentos com pelo menos N portais (padrão 3, como no site)")
     ap.add_argument("--estimativa", action="store_true",
-                    help="mostra quantas notícias faltam, sem chamar o Jev")
+                    help="mostra quantas notícias faltam, sem chamar o Gemini")
     ap.add_argument("--log", metavar="ARQUIVO", help="grava o log também em arquivo")
     args = ap.parse_args()
 
@@ -628,7 +567,7 @@ def main():
         linhas = pendentes(con, None, args.portal, args.min_portais)
         curtas = sum(1 for l in linhas if (l[4] or 0) < MIN_PALAVRAS)
         print(f"{len(linhas)} notícias para classificar "
-              f"({curtas} com texto curto, que recebem só o tom da manchete).")
+              f"({curtas} com texto curto, que recebem só o tom da manchete e o tema).")
     elif args.stats:
         mostrar_stats(con)
     elif args.temas_grupos:
@@ -640,7 +579,7 @@ def main():
     elif args.avaliar:
         avaliar(con, args.avaliar)
     else:
-        executar(con, args.limite, args.portal, args.paralelo, args.min_portais, args.engine)
+        executar(con, args.limite, args.portal, args.paralelo, args.min_portais)
 
 
 if __name__ == "__main__":

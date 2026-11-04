@@ -25,6 +25,9 @@ Uso:
     python padronizar_base.py --limpar     # só a limpeza (rode de novo depois
                                            # de baixar textos de notícias novas)
     python padronizar_base.py --simular    # mostra o que a limpeza apagaria, sem apagar
+    python padronizar_base.py --limpar --ate-hoje --sem-backup
+                                           # limpeza diária (atualização automática):
+                                           # o período vai do início até hoje
 """
 
 import argparse
@@ -259,8 +262,15 @@ def main():
     ap.add_argument("--limpar", action="store_true", help="só a limpeza, sem recoleta")
     ap.add_argument("--simular", action="store_true", help="mostra o que seria apagado")
     ap.add_argument("--delay", type=float, default=4.0, help="segundos entre buscas")
+    ap.add_argument("--ate-hoje", action="store_true",
+                    help="o período vai até hoje (para a atualização diária)")
+    ap.add_argument("--sem-backup", action="store_true", help="não faz a cópia de segurança")
     ap.add_argument("--log", metavar="ARQUIVO", help="grava o log também em arquivo")
     args = ap.parse_args()
+
+    global FIM
+    if args.ate_hoje:
+        FIM = max(FIM, date.today())
 
     if args.log:
         fh = logging.FileHandler(args.log, encoding="utf-8")
@@ -270,7 +280,7 @@ def main():
     if not os.path.exists(args.db):
         raise SystemExit(f"{args.db} não encontrado.")
 
-    if not args.simular:
+    if not args.simular and not args.sem_backup:
         fazer_backup(args.db)
     con = coletor.abrir_banco(args.db)
 

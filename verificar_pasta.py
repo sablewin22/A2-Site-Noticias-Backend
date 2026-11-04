@@ -26,24 +26,27 @@ ARQUIVOS = {
     ],
     "padronizar_base.py": [
         ("PADROES_URL_EXCLUIR", "regras de limpeza"),
+        ("--ate-hoje", "limpeza diária"),
     ],
     "classificar_noticias.py": [
         ("DIMENSOES", "4 dimensões + tema principal"),
         ("--estimativa", "versão para a entrega (só 3+ portais)"),
+        ("responseSchema", "Gemini com rótulos fixos"),
     ],
     "exportar_site.py": [
         ("RE_CREDITO_AGENCIA", "limpa créditos de foto"),
         ('"fid"', "fotos identificadas pelo link"),
         ("ler_capas", "usa as capas do baixar_capas.py"),
+        ("site/dados_site.json", "grava na pasta do site"),
     ],
     "definir_temas.py": [
         ("TERMOS", "tema pelo vocabulário do título"),
     ],
     "baixar_capas.py": [
-        ("capas.json", "capas na melhor qualidade"),
+        ("site/capas", "capas novas direto na pasta do site"),
     ],
-    "preparar_pacote.py": [
-        ("--importar", "pacote para a classificação e volta"),
+    "montar_site.py": [
+        ("__DADOS__", "monta o site para o Vercel"),
     ],
 }
 NAO_PODE_TER = {
@@ -71,17 +74,19 @@ for nome, marcas in ARQUIVOS.items():
 
 sobras = [f for f in os.listdir(".") if f.endswith(".py") and "(" in f]
 antigos = [f for f in ("baixar_fotos.py", "remover_tema.py", "limpar_pasta.py",
-                       "temas_vocabulario.py", "fotos.zip") if os.path.exists(f)]
+                       "temas_vocabulario.py", "fotos.zip", "preparar_pacote.py",
+                       "migrar_para_supabase.py", "CLASSIFICACAO.md", "capas.zip",
+                       "dados_site.json") if os.path.exists(f)]
 if antigos:
     print(f"  !! não são mais usados, podem ser apagados: {', '.join(antigos)}")
 if sobras:
     print(f"  !! arquivos com (1) no nome, podem ser apagados: {', '.join(sobras)}")
-if os.path.exists(".typesafe_key"):
-    print("  .typesafe_key presente (não enviar ao GitHub)")
+if os.path.exists(".gemini_key"):
+    print("  .gemini_key presente (não enviar ao GitHub)")
 
 print("\nBIBLIOTECAS")
 for mod in ("feedparser", "requests", "googlenewsdecoder", "trafilatura",
-            "numpy", "scipy", "sentence_transformers", "torch", "PIL", "typesafe_sdk"):
+            "numpy", "scipy", "sentence_transformers", "torch", "PIL"):
     print(f"  {ok(importlib.util.find_spec(mod) is not None)}{mod}")
 
 print("\nBANCO (noticias.db)")
@@ -119,7 +124,7 @@ else:
         print(f"  classificações: {n}")
 
 print("\nOUTROS ARQUIVOS")
-for nome in ("embeddings.npz", "dados_site.json", "capas.zip", "pacote_classificacao.zip",
+for nome in ("embeddings.npz", "site/dados_site.json", "site/index.html", "banco.zip",
              "noticias_com_band.db", "noticias_antes_padronizacao.db",
              "noticias_antes_remover_tecnologia.db", "noticias_antes_importar.db"):
     if os.path.exists(nome):

@@ -9,8 +9,7 @@ data e hora, link original, foto e, se já existirem, as classificações.
 O texto completo NÃO é exportado (só um trecho de ~200 caracteres), para não
 republicar o conteúdo dos portais.
 
-Se houver capas.zip (ou capas.json) na pasta, cada acontecimento recebe a capa
-escolhida pelo baixar_capas.py.
+Cada acontecimento recebe a capa que já estiver em site/capas/ (baixar_capas.py).
 
 Uso:
     python exportar_site.py                    # acontecimentos com 3+ portais
@@ -82,9 +81,11 @@ def trecho(texto: str | None) -> str:
     return corte[:corte.rfind(" ")].rstrip(",;:") + "…"
 
 
-def ler_capas():
+def ler_capas(pasta):
     """fids com capa em alta qualidade (do baixar_capas.py)."""
     try:
+        if os.path.isdir(pasta):
+            return {f[:-5] for f in os.listdir(pasta) if f.endswith(".webp")}
         if os.path.exists("capas.json"):
             return set(json.load(open("capas.json", encoding="utf-8")))
         if os.path.exists("capas.zip"):
@@ -108,7 +109,8 @@ def main():
     ap = argparse.ArgumentParser(description="Gera dados_site.json para a plataforma")
     ap.add_argument("--db", default="noticias.db")
     ap.add_argument("--min-portais", type=int, default=3)
-    ap.add_argument("--saida", default="dados_site.json")
+    ap.add_argument("--saida", default="site/dados_site.json")
+    ap.add_argument("--capas", default="site/capas", help="pasta com as capas")
     args = ap.parse_args()
 
     con = sqlite3.connect(f"file:{args.db}?mode=ro", uri=True)
@@ -122,7 +124,7 @@ def main():
         "SELECT id, n_portais FROM grupos WHERE n_portais >= ? ORDER BY inicio",
         (args.min_portais,)).fetchall()
 
-    capas = ler_capas()
+    capas = ler_capas(args.capas)
     subtemas, noticias = [], {}
     sem_tema = 0
     for gid, n_portais in grupos:
@@ -218,6 +220,7 @@ def main():
         "subtemas": subtemas,
         "noticias": noticias,
     }
+    os.makedirs(os.path.dirname(args.saida) or ".", exist_ok=True)
     with open(args.saida, "w", encoding="utf-8") as f:
         json.dump(dados, f, ensure_ascii=False, separators=(",", ":"))
 

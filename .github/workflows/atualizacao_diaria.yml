@@ -1,38 +1,113 @@
-name: Atualizacao Diaria de Noticias
+name: Atualização diária
 
 on:
   schedule:
-    # Roda todo dia as 09:00 UTC (06:00 no horario de Brasilia)
-    - cron: '0 9 * * *'
-  workflow_dispatch: # Permite disparar manualmente pelo site do GitHub
+    - cron: "0 9 * * *"     # todo dia às 09:00 UTC (06:00 em Brasília)
+  workflow_dispatch:         # botão "Run workflow" na aba Actions
+
+permissions:
+  contents: write            # para salvar o banco no release e enviar o site
+
+concurrency:
+  group: atualizacao-diaria  # nunca roda duas atualizações ao mesmo tempo
+  cancel-in-progress: false
 
 jobs:
   atualizar:
     runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
 
     steps:
-      - name: Baixar o codigo do repositorio
+      - name: Baixar o código
         uses: actions/checkout@v4
 
-      - name: Configurar o Python 3.12
+      - name: Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
+          cache: pip
 
-      - name: Instalar dependencias
+      - name: Instalar dependências
         run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -r requirements.txt
-          pip install requests
 
-      - name: Coletar noticias das ultimas 24h
+      - name: Guardar o modelo de agrupamento entre rodadas
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: modelo-agrupamento-v1
+
+      - name: Baixar o banco (release "dados")
+        run: |
+          gh release download dados --pattern banco.zip --repo "$GITHUB_REPOSITORY"
+          unzip -o banco.zip
+          rm banco.zip
+          ls -lh noticias.db embeddings.npz
+
+      - name: 1. Coletar notícias novas
         run: python coletor_noticias.py --atualizar
 
-      - name: Agrupar acontecimentos
+      - name: 2. Agrupar acontecimentos
         run: python agrupar_noticias.py
 
-      - name: Classificar com o Gemini e sincronizar com Supabase
+      - name: 3. Resolver os links originais
+        run: python coletor_noticias.py --decode
+
+      - name: 4. Baixar os textos
+        run: python baixar_textos.py
+
+      - name: 5. Limpar (PDFs, páginas automáticas, textos curtos)
+        run: python padronizar_base.py --limpar --ate-hoje --sem-backup
+
+      - name: 6. Agrupar de novo (depois da limpeza)
+        run: python agrupar_noticias.py
+
+      - name: 7. Definir o tema de cada acontecimento
+        run: python definir_temas.py
+
+      - name: 8. Classificar com o Gemini
+        continue-on-error: true    # se o Gemini falhar, o site atualiza mesmo assim
+        run: python classificar_noticias.py
+
+      - name: 8.5 Sincronizar com o Supabase (Nuvem)
+        continue-on-error: true
+        run: python migrar_para_supabase.py --db noticias.db
+
+      - name: 9. Gerar os dados do site, baixar capas novas e montar o site
+        run: |
+          python exportar_site.py
+          python baixar_capas.py
+          python exportar_site.py
+          python montar_site.py
+
+      - name: Salvar o banco no release "dados"
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -f noticias.db ]; then
+            zip -q banco.zip noticias.db embeddings.npz
+            gh release upload dados banco.zip --clobber --repo "$GITHUB_REPOSITORY"
+          fi
+
+      - name: Enviar o site atualizado
+        run: |
+          git config user.name "atualizacao-automatica"
+          git config user.email "actions@users.noreply.github.com"
+          git add site/
+          if git diff --cached --quiet; then
+            echo "Nada mudou no site."
+          else
+            git commit -m "Atualização diária $(date -u +%Y-%m-%d)"
+            git push
+          fi
+
+      - name: Avisar o Vercel
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-        run: python classificar_noticias.py --engine gemini
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -n "$HOOK" ]; then curl -fsS -X POST "$HOOK" > /dev/null && echo "Vercel avisado."; fi

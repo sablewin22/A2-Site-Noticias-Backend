@@ -6,11 +6,38 @@ cada uma e mostra lado a lado como cada portal deu a notícia.
 
 Portais: G1, CNN Brasil, Metrópoles, Poder360 e Agência Brasil.
 Temas: política, economia, saúde, educação, meio ambiente, esporte e cultura.
-Período: 3 meses (03/08/2026 a 02/11/2026).
+Histórico desde 03/08/2026, atualizado todo dia.
 
-**Quem vai classificar: siga o [CLASSIFICACAO.md](CLASSIFICACAO.md).**
+**Para colocar no ar pela primeira vez, siga o [CONFIGURAR.md](CONFIGURAR.md).**
 
-## Instalação (Windows, Python 3.12)
+## Como funciona
+
+Todo dia às 6h (Brasília), o GitHub Actions roda
+`.github/workflows/atualizacao_diaria.yml`:
+
+1. baixa o banco (`noticias.db` + `embeddings.npz`) do release **dados**;
+2. roda as etapas abaixo, que só processam o que é novo;
+3. salva o banco de volta no release **dados**;
+4. envia a pasta `site/` atualizada para o repositório, e o Vercel republica o site.
+
+| # | Comando | O que faz |
+|---|---|---|
+| 1 | `python coletor_noticias.py --atualizar` | Coleta as notícias novas pelo RSS do Google News, por portal, dia e tema |
+| 2 | `python agrupar_noticias.py` | Agrupa notícias do mesmo acontecimento pelo título (janela de 48 h) |
+| 3 | `python coletor_noticias.py --decode` | Resolve o link original das notícias agrupadas |
+| 4 | `python baixar_textos.py` | Baixa o texto, a foto e marca colunas de opinião |
+| 5 | `python padronizar_base.py --limpar --ate-hoje --sem-backup` | Tira PDFs, páginas automáticas, duplicatas e textos curtos |
+| 6 | `python agrupar_noticias.py` | Refaz os grupos depois da limpeza |
+| 7 | `python definir_temas.py` | Dá um tema a cada acontecimento pelo vocabulário dos títulos |
+| 8 | `python classificar_noticias.py` | Classifica com o Gemini (tipo, tom, profundidade, postura, viés político, tema) |
+| 9 | `python exportar_site.py` | Gera `site/dados_site.json` |
+| 10 | `python baixar_capas.py` | Baixa a capa dos acontecimentos novos para `site/capas/` |
+| 11 | `python montar_site.py` | Junta modelo, dados e capas em `site/index.html` |
+
+Para rodar na hora, sem esperar o horário: aba **Actions** > **Atualização
+diária** > **Run workflow**.
+
+## Rodar no próprio computador (opcional)
 
 ```
 py -V:3.12 -m venv .venv
@@ -18,33 +45,11 @@ py -V:3.12 -m venv .venv
 pip install -r requirements.txt
 ```
 
-No Mac: `python3.12 -m venv .venv` e `source .venv/bin/activate`.
-
-O banco `noticias.db` não fica no repositório: é grande e guarda os textos
-completos das matérias. Peça a cópia ao grupo.
-
-## Etapas
-
-| # | Comando | O que faz |
-|---|---|---|
-| 1 | `python coletor_noticias.py --log historico.log` | Coleta 90 dias pelo RSS do Google News, por portal, dia e tema |
-| 2 | `python agrupar_noticias.py` | Agrupa notícias do mesmo acontecimento pelo título (janela de 48 h) |
-| 3 | `python coletor_noticias.py --decode --log decode.log` | Resolve o link original das notícias agrupadas |
-| 4 | `python baixar_textos.py --log textos.log` | Baixa o texto, a foto e marca colunas de opinião |
-| 5 | `python padronizar_base.py --limpar` | Tira PDFs, páginas automáticas, duplicatas e textos curtos |
-| 6 | `python definir_temas.py` | Dá um tema a cada acontecimento pelo vocabulário dos títulos |
-| 7 | `python baixar_capas.py` | Escolhe a foto de melhor qualidade de cada acontecimento (`capas.zip`) |
-| 8 | `python classificar_noticias.py` | Classifica tipo, tom da manchete, profundidade e postura (Jev) |
-| 9 | `python exportar_site.py` | Gera `dados_site.json`, que alimenta o site |
-
-As etapas retomam de onde pararam se forem interrompidas.
-
-### Classificação em outro computador
-
-```
-python preparar_pacote.py                              # gera pacote_classificacao.zip
-python preparar_pacote.py --importar classificado.zip  # traz o resultado de volta
-```
+Baixe o `banco.zip` do release **dados** e descompacte na pasta. A chave do
+Gemini vai em `python classificar_noticias.py --salvar-chave` (fica em
+`.gemini_key`, que nunca vai para o GitHub). Se você mudar o banco no seu
+computador, suba o novo `banco.zip` no release, senão a próxima rodada
+automática parte da versão antiga.
 
 ## Conferências
 
@@ -52,8 +57,10 @@ python preparar_pacote.py --importar classificado.zip  # traz o resultado de vol
 python verificar_pasta.py                 # arquivos, bibliotecas e banco
 python agrupar_noticias.py --amostra 40   # amostra de grupos para validar à mão
 python definir_temas.py --amostra 30      # amostra de temas
-python baixar_textos.py --stats           # taxa de sucesso por portal
 python classificar_noticias.py --stats    # distribuição dos rótulos por portal
+python classificar_noticias.py --exemplos 10      # classificações com justificativa
+python classificar_noticias.py --validacao 200    # planilha para anotar à mão
+python classificar_noticias.py --avaliar validacao.csv   # acerto do modelo
 ```
 
 ## Decisões de metodologia
@@ -67,6 +74,10 @@ python classificar_noticias.py --stats    # distribuição dos rótulos por port
 - O site mostra os acontecimentos cobertos por 3 ou mais portais.
 - Cada acontecimento tem um único tema, definido pelo vocabulário dos títulos
   e do começo dos textos.
-- Notícias com menos de 80 palavras recebem só o tom da manchete.
-- Os textos completos ficam só no banco local, para análise. O site mostra
+- A classificação usa o Gemini com resposta presa aos rótulos de cada
+  critério. A confiança de cada critério é a avaliação do próprio modelo (não
+  uma probabilidade medida); abaixo de 60% a notícia não entra nas colunas.
+  O viés político é um critério separado da postura.
+- Notícias com menos de 80 palavras recebem só o tom da manchete e o tema.
+- Os textos completos ficam só no banco (release privado). O site mostra
   apenas título, um trecho de ~200 caracteres e o link para o portal.

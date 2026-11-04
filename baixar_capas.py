@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Baixa a foto de capa de cada acontecimento em boa qualidade.
+Baixa a capa de cada acontecimento em boa qualidade.
 
-Para cada acontecimento do dados_site.json:
+Para cada acontecimento do dados_site.json que ainda não tem capa na pasta:
 - baixa a foto ORIGINAL de cada notícia do grupo;
 - escolhe a de maior resolução real (mais pixels);
-- salva essa foto com até 640 px de largura (o dobro do espaço que ela ocupa
-  no site, para ficar nítida em telas de alta resolução), em WebP qualidade 82.
+- salva com até 640 px de largura (o dobro do espaço que ocupa no site),
+  em WebP qualidade 82, como site/capas/<fid>.webp.
 
-Gera capas.zip, com uma foto por acontecimento (<fid>.webp) e um arquivo
-capas.json com a resolução original de cada uma.
+Acontecimentos que já têm capa são pulados, então rodar todo dia só baixa as
+fotos dos acontecimentos novos.
 
 Instalação:
     pip install pillow requests
@@ -21,10 +21,9 @@ Uso:
 
 import argparse
 import io
-import json
 import os
 import time
-import zipfile
+import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
@@ -46,6 +45,8 @@ def baixar_original(fid, url):
                 return fid, None
             img = Image.open(io.BytesIO(r.content))
             img.load()
+            if img.mode in ("P", "LA", "RGBA"):
+                img = img.convert("RGBA")
             return fid, img.convert("RGB")
         except Exception:
             time.sleep(1 + tentativa)
@@ -53,23 +54,31 @@ def baixar_original(fid, url):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Baixa as capas dos acontecimentos em boa qualidade")
-    ap.add_argument("--dados", default="dados_site.json")
-    ap.add_argument("--saida", default="capas.zip")
+    ap = argparse.ArgumentParser(description="Baixa as capas dos acontecimentos")
+    ap.add_argument("--dados", default="site/dados_site.json")
+    ap.add_argument("--pasta", default="site/capas")
     ap.add_argument("--largura", type=int, default=640)
     ap.add_argument("--qualidade", type=int, default=82)
     ap.add_argument("--paralelo", type=int, default=6)
     args = ap.parse_args()
 
+    os.makedirs(args.pasta, exist_ok=True)
+    existentes = {f[:-5] for f in os.listdir(args.pasta) if f.endswith(".webp")}
     dados = json.load(open(args.dados, encoding="utf-8"))
-    grupos = {s["id"]: [(n["fid"], n["imagem"]) for n in dados["noticias"][s["id"]]
-                        if n.get("imagem") and n.get("fid")]
-              for s in dados["subtemas"]}
-    urls = {fid: url for lista in grupos.values() for fid, url in lista}
-    print(f"{len(grupos)} acontecimentos, {len(urls)} fotos originais para comparar...")
 
-    # baixa todas as originais, guardando só a resolução e a imagem da melhor de cada grupo
+    grupos = {}
+    for s in dados["subtemas"]:
+        lista = [(n["fid"], n["imagem"]) for n in dados["noticias"][s["id"]]
+                 if n.get("imagem") and n.get("fid")]
+        if lista and not any(fid in existentes for fid, _ in lista):
+            grupos[s["id"]] = lista
+    if not grupos:
+        print(f"Todas as capas já existem ({len(existentes)} na pasta).")
+        return
+    urls = {fid: url for lista in grupos.values() for fid, url in lista}
     dono = {fid: sid for sid, lista in grupos.items() for fid, _ in lista}
+    print(f"{len(grupos)} acontecimentos sem capa, {len(urls)} fotos para comparar...")
+
     melhor = {}   # sid -> (pixels, fid, imagem)
     feitas = falhas = 0
     with ThreadPoolExecutor(args.paralelo) as pool:
@@ -87,24 +96,16 @@ def main():
             if feitas % 200 == 0 or feitas == len(urls):
                 print(f"  [{feitas}/{len(urls)}] falhas: {falhas}")
 
-    resolucao = {}
-    with zipfile.ZipFile(args.saida, "w", zipfile.ZIP_STORED) as z:
-        for sid, (px, fid, img) in melhor.items():
-            resolucao[fid] = [img.width, img.height]
-            if img.width > args.largura:
-                img = img.resize((args.largura, round(img.height * args.largura / img.width)),
-                                 Image.LANCZOS)
-            saida = io.BytesIO()
-            img.save(saida, "WEBP", quality=args.qualidade, method=6)
-            z.writestr(f"{fid}.webp", saida.getvalue())
-        z.writestr("capas.json", json.dumps(resolucao))
+    for sid, (_px, fid, img) in melhor.items():
+        if img.width > args.largura:
+            img = img.resize((args.largura, round(img.height * args.largura / img.width)),
+                             Image.LANCZOS)
+        img.save(os.path.join(args.pasta, f"{fid}.webp"), "WEBP",
+                 quality=args.qualidade, method=6)
 
-    pequenas = sum(1 for w, _ in resolucao.values() if w < args.largura)
-    print(f"\n{len(melhor)} capas em {args.saida} ({os.path.getsize(args.saida) / 1e6:.1f} MB)")
-    print(f"{len(grupos) - len(melhor)} acontecimentos ficaram sem capa (nenhuma foto baixou).")
-    if pequenas:
-        print(f"{pequenas} capas têm original menor que {args.largura} px "
-              f"(foram mantidas no tamanho original).")
+    print(f"\n{len(melhor)} capas novas em {args.pasta}/")
+    if len(grupos) - len(melhor):
+        print(f"{len(grupos) - len(melhor)} acontecimentos ficaram sem capa (nenhuma foto baixou).")
 
 
 if __name__ == "__main__":

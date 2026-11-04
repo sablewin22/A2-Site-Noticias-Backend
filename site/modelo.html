@@ -42,6 +42,16 @@ html.js [data-r="left"]{transform:translateX(-60px)}
 header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--bg);border-bottom:1px solid var(--line);transition:background-color .7s,border-color .7s}
 header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:12px}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+/* Logo do topo: a palavra fica entre duas linhas; ao clicar, as linhas a amassam e soltam */
+.logo .ew{position:relative;display:inline-block;padding:5px 2px}
+.logo .ew::before,.logo .ew::after{content:"";position:absolute;left:0;right:0;height:2px;border-radius:2px;background:currentColor;opacity:.28}
+.logo .ew::before{top:0;--y:5px}.logo .ew::after{bottom:0;--y:-5px}
+.logo .ew b{display:inline-block;transform-origin:50% 55%}
+.logo.amassa .ew::before,.logo.amassa .ew::after{animation:ew-linha .9s cubic-bezier(.5,0,.3,1) both}
+.logo.amassa .ew b{animation:ew-palavra .9s cubic-bezier(.5,0,.3,1) both}
+@keyframes ew-linha{0%{transform:none}35%{transform:translateY(var(--y)) scaleX(1.06)}60%{transform:translateY(calc(var(--y) * -.5))}80%,100%{transform:none}}
+@keyframes ew-palavra{0%{transform:none}35%{transform:scale(1.08,.62)}60%{transform:scale(.97,1.12)}80%{transform:scale(1.01,.97)}100%{transform:none}}
+@media (prefers-reduced-motion:reduce){.logo.amassa .ew::before,.logo.amassa .ew::after,.logo.amassa .ew b{animation:none}}
 .logo b{font-family:var(--fd);font-weight:var(--fw);text-transform:var(--case);letter-spacing:var(--track);font-size:calc(1.45rem * min(1, var(--fs) * 1.25))}
 .dots3{position:relative;width:30px;height:18px;flex:none}
 .dots3 i{position:absolute;top:0;width:18px;height:18px;border-radius:50%}
@@ -56,7 +66,7 @@ header.top .wrap{display:flex;align-items:center;justify-content:space-between;g
 @media (max-width:760px){
   :root{--bar-h:calc(64px + env(safe-area-inset-bottom,0px))}
   header.top .tabs{display:none}
-  .tabbar{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;position:fixed;left:0;right:0;bottom:0;z-index:55;background:var(--bg);border-top:1px solid var(--line);padding:8px max(8px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));transition:background-color .7s}
+  .tabbar{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;position:fixed;left:0;right:0;bottom:0;z-index:55;background:var(--bg);border-top:1px solid var(--line);padding:8px max(8px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));transition:background-color .7s}
   .tabbar a{position:relative;z-index:1;display:grid;place-items:center;text-decoration:none;font-size:.8rem;font-weight:500;padding:10px 2px;border-radius:12px;color:var(--muted)}
   .tabbar a[aria-current="page"]{color:var(--bg)}
 }
@@ -138,7 +148,7 @@ header.top .tabs{margin-left:auto}
 .obtn .fs{font-size:1.6rem;line-height:1.05;white-space:nowrap;overflow:hidden}
 
 /* ── Início ── */
-.hero{min-height:calc(100svh - 62px - var(--bar-h) - env(safe-area-inset-top,0px));display:flex;padding-block:clamp(28px,5vw,64px) 24px}
+.hero{display:flex;padding-block:clamp(36px,6vw,88px) clamp(28px,4vw,56px)}
 .hero,.fxbg{position:relative;overflow:hidden}
 .fxbg>.wrap{position:relative;z-index:1}
 .hero h1,.fxbg h1,.fxbg .crumbs,.fxbg .sub,.hero-txt p{width:fit-content;max-width:100%}
@@ -173,6 +183,135 @@ header.top .tabs{margin-left:auto}
 .hero-foot{display:flex;flex-wrap:wrap;gap:24px 48px;align-items:end;justify-content:space-between}
 .hero-foot p{margin:0;max-width:44ch;font-size:clamp(1.1rem,1.6vw,1.35rem);color:var(--muted)}
 .hero-foot p b{color:var(--fg)}
+/* ── Painel: o que está acontecendo, em números ── */
+.pn-top{display:flex;flex-wrap:wrap;gap:16px 32px;align-items:end;justify-content:space-between;margin-bottom:clamp(20px,3vw,32px)}
+.pn-top p{margin:0;max-width:52ch;color:var(--muted)}
+.pn-body{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:clamp(12px,1.4vw,18px);animation:pn-in .45s ease both}
+@keyframes pn-in{from{opacity:0;transform:translateY(8px)}}
+.pn-card{grid-column:span 12;min-width:0;background:var(--surface);border-radius:22px;padding:clamp(18px,2.2vw,28px)}
+.pn-card h2{margin:0;font-size:clamp(1.15rem,1.6vw,1.4rem);font-weight:800;letter-spacing:-.01em;line-height:1.2}
+.pn-card .pn-sub{margin:4px 0 18px;font-size:.92rem;color:var(--muted)}
+.pn-kpis{grid-column:span 12;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:1fr;gap:inherit}
+.pn-kpis .pn-kpi{grid-column:auto}
+.pn-kpi{display:grid;gap:6px;align-content:start}
+.pn-kpi .lbl{font-size:.85rem;font-weight:600;color:var(--muted)}
+.pn-kpi b{font-family:var(--fd);font-weight:var(--fw);letter-spacing:var(--track);font-size:clamp(1.05rem,13cqi,2.6rem);line-height:1.05;overflow-wrap:anywhere;hyphens:auto}
+.pn-kpi .det{font-size:.88rem;color:var(--muted)}
+.pn-kpi{container-type:inline-size}
+.pn-kpi.k1{background:var(--a1);color:var(--on1)}.pn-kpi.k2{background:var(--a2);color:var(--on2)}.pn-kpi.k3{background:var(--a3);color:var(--on3)}.pn-kpi.k4{background:var(--fg);color:var(--bg)}
+.pn-kpi.k1 .lbl,.pn-kpi.k1 .det{color:color-mix(in srgb,var(--on1) 72%,transparent)}.pn-kpi.k2 .lbl,.pn-kpi.k2 .det{color:color-mix(in srgb,var(--on2) 72%,transparent)}.pn-kpi.k4 .lbl,.pn-kpi.k4 .det{color:color-mix(in srgb,var(--bg) 72%,transparent)}
+.pn-kpi.k3 .lbl,.pn-kpi.k3 .det{color:color-mix(in srgb,var(--on3) 82%,transparent)}
+.pn-kpi a{color:inherit;text-decoration:none}.pn-kpi a:hover{text-decoration:underline}
+.s5{grid-column:span 5}.s7{grid-column:span 7}.s6{grid-column:span 6}
+.pn-bars{display:grid;gap:8px}
+.pn-row{display:grid;grid-template-columns:minmax(84px,128px) minmax(0,1fr) auto;gap:12px;align-items:center;font-size:.92rem}
+.pn-row .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:inherit;text-decoration:none}
+.pn-row a.nm:hover{text-decoration:underline}
+.pn-track{height:14px;border-radius:4px;background:color-mix(in srgb,var(--fg) 6%,transparent);overflow:hidden}
+.pn-fill{height:100%;border-radius:4px;background:var(--a3);transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.pn-row .val{font-variant-numeric:tabular-nums;font-weight:700;text-align:right;white-space:nowrap}
+.pn-row .val small{font-weight:500;color:var(--muted);margin-left:6px}
+.up{color:var(--fg)}.dn{color:var(--muted)}
+.pn-heat{overflow-x:auto}
+.pn-heat table{border-collapse:separate;border-spacing:3px;width:100%;min-width:560px;font-size:.88rem}
+.pn-heat th{font-weight:600;color:var(--muted);text-align:center;padding:4px 2px;white-space:nowrap}
+.pn-heat th a{color:inherit;text-decoration:none}.pn-heat th a:hover{color:var(--fg);text-decoration:underline}
+.pn-heat tbody th{text-align:left;color:var(--fg);padding-right:10px}
+.pn-heat td{text-align:left;border-radius:8px;padding:8px 8px 9px;font-variant-numeric:tabular-nums;font-weight:600;background:color-mix(in srgb,var(--fg) 5%,transparent);vertical-align:bottom}
+.pn-heat td span{display:block;margin-bottom:6px}
+.pn-heat td i{display:block;height:6px;width:var(--q);border-radius:3px;background:var(--c)}
+.pn-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--c)}
+.pn-heat td.top{font-weight:800;box-shadow:inset 0 0 0 2px var(--c)}
+.pn-note{margin:12px 0 0;font-size:.85rem;color:var(--muted)}
+.pn-stack{display:flex;gap:2px;height:28px}
+.pn-stack i{display:grid;place-items:center;min-width:0;font-style:normal;font-size:.78rem;font-weight:700;overflow:hidden;white-space:nowrap}
+.pn-stack i:first-child{border-radius:6px 0 0 6px}.pn-stack i:last-child{border-radius:0 6px 6px 0}
+.pn-srow{display:grid;grid-template-columns:minmax(84px,128px) minmax(0,1fr);gap:12px;align-items:center;font-size:.92rem}
+.pn-legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin:0 0 14px;font-size:.88rem;color:var(--muted)}
+.pn-legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px;background:var(--c)}
+.pn-bfly{display:grid;gap:8px}
+.pn-brow{display:grid;grid-template-columns:minmax(0,1fr) minmax(90px,130px) minmax(0,1fr);gap:10px;align-items:center;font-size:.92rem}
+.pn-brow .c{text-align:center;font-weight:600}
+.pn-brow .l,.pn-brow .r{display:flex;align-items:center;gap:8px}
+.pn-brow .l{flex-direction:row-reverse}
+.pn-brow .l .pn-track,.pn-brow .r .pn-track{flex:1;background:transparent}
+.pn-brow .l .pn-fill{margin-left:auto}
+.pn-brow small{font-variant-numeric:tabular-nums;font-weight:700;min-width:3ch}
+.pn-bhead{display:grid;grid-template-columns:minmax(0,1fr) minmax(90px,130px) minmax(0,1fr);gap:10px;font-weight:800;margin-bottom:6px}
+.pn-bhead span:first-child{text-align:right}
+.pn-wait{display:grid;gap:8px;place-items:center;text-align:center;padding:clamp(28px,5vw,56px) 16px;border-radius:16px;border:1.5px dashed var(--line);color:var(--muted)}
+.pn-wait b{color:var(--fg);font-size:1.05rem}
+.pn-wait span{max-width:46ch;font-size:.92rem}
+.pn-tip{position:fixed;z-index:80;pointer-events:none;max-width:260px;padding:8px 12px;border-radius:10px;background:var(--fg);color:var(--bg);font-size:.85rem;line-height:1.35;opacity:0;transform:translate(-50%,calc(-100% - 12px));transition:opacity .15s}
+.pn-tip.on{opacity:1}
+@media (max-width:1000px){.pn-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.s5,.s7,.s6{grid-column:span 12}}
+@media (max-width:520px){.pn-kpi{padding:16px}.pn-kpi b{font-size:clamp(1.05rem,13cqi,1.45rem)}.pn-row,.pn-srow{grid-template-columns:84px minmax(0,1fr) auto}.pn-srow{grid-template-columns:84px minmax(0,1fr)}}
+/* ── Início: lentes e destaques ── */
+.hero-grid{display:grid!important;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);align-items:center;gap:clamp(24px,4vw,64px)!important}
+.hero-main{display:grid;gap:clamp(24px,4vw,44px)}
+.lens{margin:0;display:grid;justify-items:center;gap:18px}
+
+.lens-stage{position:relative;width:min(100%,520px);aspect-ratio:5/4;container-type:size}
+.lp{position:absolute;inset:0}
+.ln{position:absolute;left:0;top:50%;width:30%;aspect-ratio:1;margin-top:-15cqw;border-radius:50%;transform-origin:50% 50%;transform:var(--t0)}
+.ln1{--t0:none}.ln2{--t0:translateX(33.3%)}.ln3{--t0:translateX(66.7%)}
+@keyframes ln1{0%,100%{transform:none}}
+@keyframes ln2{0%,6%{transform:translateX(33.3%)}30%,74%{transform:translateX(116.7%)}96%,100%{transform:translateX(33.3%)}}
+@keyframes ln3{0%{transform:translateX(66.7%)}26%,78%{transform:translateX(233.3%)}100%{transform:translateX(66.7%)}}
+@keyframes lbl{0%,24%{opacity:0;transform:translate(-50%,6px)}34%,70%{opacity:1;transform:translateX(-50%)}78%,100%{opacity:0;transform:translateX(-50%)}}
+.lens-stage.play .ln{animation:5s cubic-bezier(.65,0,.35,1) 1 both}.lens-stage.play .ln1{animation-name:ln1}.lens-stage.play .ln2{animation-name:ln2}.lens-stage.play .ln3{animation-name:ln3}
+.ln1{background:var(--a1)}.ln2{background:var(--a2)}.ln3{background:var(--a3)}
+/* as bolinhas ficam juntas como no logo e se afastam para a direita: uma vez ao abrir o site
+   e de novo quando o mouse passa por cima (ou um toque, no celular) */
+.ll{position:absolute;top:90%;transform:translateX(-50%);white-space:nowrap;font-size:.85rem;font-weight:700;color:var(--fg);opacity:0}
+.lens-stage.play .ll{animation:lbl 5s ease 1 both}
+.lens-stage{cursor:pointer}
+.ll::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:1px;background:var(--c)}
+.ll1{left:15%;--c:var(--a1)}.ll2{left:50%;--c:var(--a2)}.ll3{left:85%;--c:var(--a3)}
+@media (prefers-reduced-motion:reduce){
+  .lens-stage.play .ln,.ln{animation:none}.ln1{transform:none}.ln2{transform:translateX(116.7%)}.ln3{transform:translateX(233.3%)}
+  .lens-stage.play .ll,.ll{animation:none;opacity:1}.lp{transition:none}
+}
+@media (max-width:760px){
+  .hero-grid{grid-template-columns:minmax(0,1fr)}
+  .lens-stage{width:min(86vw,360px)}
+  .ll{font-size:.75rem}
+}
+.dest{padding-block:clamp(40px,6vw,80px) clamp(56px,8vw,110px)}
+.dest .sec-head h2{font-size:calc(clamp(2.4rem,5.4vw,5rem) * var(--fs))}
+.dest .kick{display:block;margin-bottom:12px;font-size:.95rem;font-weight:700;color:var(--fg)}
+.dest-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:clamp(14px,1.6vw,22px)}
+.dest-card{position:relative;display:flex;flex-direction:column;gap:12px;text-decoration:none;color:inherit;min-width:0}
+.dest-card .ph{width:100%;aspect-ratio:16/10;border-radius:18px}
+.dest-card .ph img{transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+.dest-card:hover .ph img,.dest-card:focus-visible .ph img{transform:scale(1.04)}
+.dest-card h3{margin:0;font-weight:800;letter-spacing:-.015em;line-height:1.15;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;text-wrap:balance}
+.dest-card:hover h3{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+.dest-tx{display:grid;gap:10px;align-content:start}
+.dest-tx .chip{justify-self:start;border-radius:999px;padding:5px 12px;font-size:.78rem;font-weight:700}
+.dest-meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;font-size:.85rem;color:var(--muted)}
+.dest-logos{display:flex;gap:4px}
+.dest-logos img{width:22px;height:22px;border-radius:6px;object-fit:cover;background:#fff}
+.dest-card.ov{border-radius:22px;overflow:hidden;color:#fff;justify-content:flex-end;isolation:isolate}
+.dest-card.ov .ph{position:absolute;inset:0;height:100%;aspect-ratio:auto;border-radius:0;z-index:-1}
+.dest-card.ov .dest-tx{padding:clamp(18px,2.4vw,32px);padding-top:clamp(60px,8vw,120px);background:linear-gradient(transparent,rgba(0,0,0,.55) 35%,rgba(0,0,0,.85))}
+.dest-card.ov .dest-meta{color:rgba(255,255,255,.82)}
+
+.dc0{grid-column:1/8;grid-row:1/3;min-height:clamp(440px,44vw,620px)}
+.dc0 h3{font-family:var(--fd);font-size:calc(clamp(2rem,3.6vw,3.4rem) * min(1, var(--fs) * 1.5));line-height:1.02;-webkit-line-clamp:4}
+.dc1,.dc2{grid-column:8/13;min-height:clamp(220px,21vw,300px)}
+.dc1 h3,.dc2 h3{font-size:clamp(1.2rem,1.6vw,1.5rem)}
+.dc3,.dc4,.dc5{grid-column:span 4}
+.dc3 h3,.dc4 h3,.dc5 h3{font-size:clamp(1.1rem,1.3vw,1.3rem)}
+@media (max-width:1100px){.dc0{grid-column:1/-1;grid-row:auto}.dc1,.dc2{grid-column:span 6}}
+@media (max-width:760px){
+  .dest-grid{grid-template-columns:minmax(0,1fr)}
+  .dc0,.dc1,.dc2,.dc3,.dc4,.dc5{grid-column:1/-1}
+  .dc0{min-height:400px}.dc1,.dc2{min-height:240px}
+  .dc3,.dc4,.dc5{display:grid;grid-template-columns:118px minmax(0,1fr);gap:14px;align-items:start}
+  .dc3 .ph,.dc4 .ph,.dc5 .ph{aspect-ratio:1;border-radius:14px}
+}
+
 .grow-wrap{padding-block:0 clamp(72px,10vw,150px)}
 .grow{--q:0;position:relative;display:block;text-decoration:none;transform:scale(calc(.8 + var(--q) * .2));border-radius:calc(48px - var(--q) * 36px);overflow:hidden;transform-origin:center top}
 .grow .ph{border-radius:0;aspect-ratio:16/8;min-height:320px}
@@ -519,9 +658,10 @@ footer ul a:hover{color:var(--fg)}
 
 <header class="top">
   <div class="wrap">
-    <a class="logo" href="#inicio" aria-label="Entrelinhas, início"><span class="dots3"><i></i><i></i><i></i></span><b>Entrelinhas</b></a>
+    <a class="logo" href="#inicio" aria-label="Entrelinhas, início"><span class="dots3"><i></i><i></i><i></i></span><span class="ew"><b>Entrelinhas</b></span></a>
     <nav class="tabs" aria-label="Seções">
       <a href="#inicio" data-tab="inicio">Início</a>
+      <a href="#painel" data-tab="painel">Painel</a>
       <a href="#temas" data-tab="temas">Temas</a>
       <a href="#portais" data-tab="portais">Portais</a>
       <a href="#metodologia" data-tab="metodologia">Metodologia</a>
@@ -532,9 +672,10 @@ footer ul a:hover{color:var(--fg)}
 </header>
 <nav class="tabbar" aria-label="Seções">
   <a href="#inicio" data-tab="inicio">Início</a>
+  <a href="#painel" data-tab="painel">Painel</a>
   <a href="#temas" data-tab="temas">Temas</a>
   <a href="#portais" data-tab="portais">Portais</a>
-  <a href="#metodologia" data-tab="metodologia">Metodologia</a>
+  <a href="#metodologia" data-tab="metodologia">Método</a>
   <a href="#sobre" data-tab="sobre">Sobre</a>
 </nav>
 <div class="search" id="search" role="dialog" aria-modal="true" aria-label="Buscar" hidden>
@@ -550,11 +691,11 @@ footer ul a:hover{color:var(--fg)}
   <div class="foot-cols">
     <div class="foot-about"><span class="dots3"><i></i><i></i><i></i></span><p>Comparador de cobertura jornalística. Agrupa notícias de diferentes portais sobre o mesmo fato e as separa pelo critério que você escolher.</p></div>
     <div><h4>Navegação</h4><ul>
-      <li><a href="#inicio">Início</a></li><li><a href="#temas">Temas</a></li><li><a href="#portais">Portais</a></li>
+      <li><a href="#inicio">Início</a></li><li><a href="#painel">Painel</a></li><li><a href="#temas">Temas</a></li><li><a href="#portais">Portais</a></li>
       <li id="foot-met"><a href="#metodologia">Metodologia</a></li><li><a href="#sobre">Sobre nós</a></li></ul></div>
     <div><h4>Projeto</h4><ul>
       <li>Desenvolvido na FGV Comunicação</li><li>2026</li></ul>
-      <h4 style="margin-top:22px">Orientação</h4><ul><li>Matheus Pestana</li></ul></div>
+      <h4 style="margin-top:22px">Orientação</h4><ul><li>Prof. Dr. Matheus Pestana</li></ul></div>
     <div><h4>Equipe</h4><ul>
       <li>Jamilly Medeiros</li><li>João Vianna</li><li>Julia Cereja</li><li>Sabrina Azulay Lewin</li></ul></div>
   </div>
@@ -902,17 +1043,25 @@ let critDemo="tipo";
 async function viewInicio(){
   const subs=await Dados.subtemas(), temas=await Dados.temas(), top=subs.slice(0,6), cop=await Dados.subtema(subs[0].id);
   const t="Compare notícias.", th="Compare<br>notícias.";
-  const manchetes=[];for(const s of subs){const f=await Dados.subtema(s.id);const n=f.noticias[0];manchetes.push({p:portalNome(n.portal),t:n.titulo,img:fotoSub(s.id)});if(manchetes.length>=40)break}
-  MANCHETES=manchetes;
   return `
-  <section class="hero" data-tone="light"><canvas class="halftone" aria-hidden="true"></canvas><div class="wrap">
-    <h1 class="D split3" aria-label="${t}"><span class="l l1" aria-hidden="true">${th}</span><span class="l l2" aria-hidden="true">${th}</span><span class="l l3" aria-hidden="true">${th}</span><span class="l lm" aria-hidden="true">${th}</span></h1>
-    <div class="hero-foot" data-r style="--d:.15s">
-      <div class="hero-txt"><p>Veja como cada portal contou o mesmo fato. O <b class="mark">Entrelinhas</b> junta as notícias e separa do jeito que você escolher.</p></div>
+  <section class="hero" data-tone="light"><canvas class="halftone" aria-hidden="true"></canvas><div class="wrap hero-grid">
+    <div class="hero-main">
+      <h1 class="D split3" aria-label="${t}"><span class="l l1" aria-hidden="true">${th}</span><span class="l l2" aria-hidden="true">${th}</span><span class="l l3" aria-hidden="true">${th}</span><span class="l lm" aria-hidden="true">${th}</span></h1>
+      <div class="hero-foot" data-r style="--d:.15s">
+        <div class="hero-txt"><p>Veja como cada portal contou o mesmo fato. O <b class="mark">Entrelinhas</b> junta as notícias e separa do jeito que você escolher.</p></div>
+      </div>
     </div>
-    <div class="bottom-row" data-r style="--d:.3s">
-      <div class="feed" id="feed" aria-label="Manchetes recentes de vários portais"><div class="trk" id="feed-trk"></div></div>
-    </div>
+    <figure class="lens" id="lens" data-r="scale" style="--d:.2s">
+      <div class="lens-stage" aria-hidden="true">
+        <div class="lp" style="--k:8"><i class="ln ln1"></i></div><div class="lp" style="--k:14"><i class="ln ln2"></i></div><div class="lp" style="--k:20"><i class="ln ln3"></i></div>
+        <span class="ll ll1">G1</span><span class="ll ll2">CNN Brasil</span><span class="ll ll3">Metrópoles</span>
+      </div>
+    </figure>
+  </div></section>
+
+  <section class="dest" data-tone="light"><div class="wrap">
+    <div class="sec-head" data-r><div><span class="kick">Em destaque</span><h2 class="D">Os mais cobertos</h2></div><p>Os acontecimentos recentes que mais portais noticiaram. Abra um para comparar.</p></div>
+    <div class="dest-grid">${destaques(subs).map((s,i)=>cardDestaque(s,i)).join("")}</div>
   </div></section>
 
 
@@ -940,6 +1089,43 @@ async function viewInicio(){
     <span class="mono" data-r style="display:block;margin-bottom:20px;font-size:1.25rem;font-weight:700;color:var(--fg)">Explorar por tema</span>
     <div class="words">${temas.map((tm,i)=>`<a class="D" data-r style="--d:${i*.05}s" href="#tema-${tm.id}">${esc(tm.nome)}<sup>${i+1}</sup></a>`).join("")}</div>
   </div></section>`;
+}
+/* Destaques: acontecimentos recentes (últimos 14 dias da base) com mais portais;
+   no máximo 3 por tema, para a capa não ficar só com um assunto. */
+function destaques(subs){
+  const t=s=>+new Date(s.data||0), tmax=Math.max(...subs.map(t));
+  const ord=(a,b)=>b.portais-a.portais||b.noticias-a.noticias||t(b)-t(a);
+  const recentes=subs.filter(s=>tmax-t(s)<=14*864e5).sort(ord), resto=subs.filter(s=>tmax-t(s)>14*864e5).sort(ord);
+  // matérias de serviço (loteria, "veja como", "onde assistir"...) não vão para a capa
+  const servico=/mega-sena|lotof[aá]cil|quina\b|loteria|resultado d|onde assistir|veja como|confira|saiba como|relembre|ao vivo|[ií]ntegra|assista/i;
+  const temFoto=s=>!!fotoSub(s.id), out=[], porTema={};
+  const tenta=(lista,limite,foto,todas)=>{for(const s of lista){if(out.length>=6)return;if(out.includes(s))continue;if(!todas&&servico.test(s.titulo))continue;if(foto&&!temFoto(s))continue;if((porTema[s.tema]||0)>=limite)continue;out.push(s);porTema[s.tema]=(porTema[s.tema]||0)+1}};
+  tenta(recentes,3,true);tenta(recentes,3,false);tenta(resto,3,true);tenta(recentes,6,false,true);tenta(resto,6,false,true);
+  // a manchete principal precisa de foto
+  const i=out.findIndex(temFoto);if(i>0)out.unshift(out.splice(i,1)[0]);
+  return out;
+}
+function cardDestaque(s,i){
+  const ti=MOCK.temas.findIndex(x=>x.id===s.tema), ids=[...new Set((MOCK.noticias[s.id]||[]).map(n=>n.portal))];
+  const logos=ids.map(id=>LOGOS[id]?`<img src="${esc(LOGOS[id])}" alt="" title="${esc(portalNome(id))}">`:"").join("");
+  return `<a class="dest-card dc${i}${i<3?" ov":""}" href="#sub-${s.id}" data-r style="--d:${(i*.06).toFixed(2)}s">
+    ${foto(fotoSub(s.id),"Foto do acontecimento")}
+    <div class="dest-tx"><span class="chip ${FILL[(ti<0?0:ti)%3]}">${esc(temaNome(s.tema))}</span><h3>${esc(s.titulo)}</h3>
+    <div class="dest-meta"><span class="dest-logos">${logos}</span><span>${s.portais} portais · ${s.noticias} notícias · ${esc(s.atualizado||"")}</span></div></div></a>`;
+}
+/* Bolinhas do logo entre duas linhas: a cada volta, os rótulos mostram outros portais. */
+let lentesVistas=false;
+function lentes(){
+  const st=$("#lens .lens-stage"); if(!st) return;
+  const nomes=MOCK.portais.map(p=>p.nome), ls=[...st.querySelectorAll(".ll")]; let k=0;
+  const troca=()=>{ls.forEach((l,j)=>{l.textContent=nomes[(k+j)%nomes.length]});k=(k+3)%nomes.length};
+  troca();
+  const toca=()=>{if(reduce||st.classList.contains("play"))return;st.classList.add("play")};
+  st.querySelector(".ln3").addEventListener("animationend",()=>{st.classList.remove("play");troca()});
+  st.addEventListener("pointerenter",toca);
+  st.addEventListener("click",toca);
+  // na primeira vez que a página inicial aparece, roda sozinha
+  if(!lentesVistas){lentesVistas=true;setTimeout(toca,500)}
 }
 async function renderDemo(){
   const sub=await Dados.subtema(MOCK.noticias["copom-selic"]?"copom-selic":(await Dados.subtemas())[0].id), C=CRITERIOS.find(c=>c.id===critDemo), d=[0,0,0];
@@ -977,7 +1163,7 @@ function halftone(hero){
   if(hover&&!reduce){
     hero.addEventListener("pointermove",e=>{const r=hero.getBoundingClientRect();tx=e.clientX-r.left;ty=e.clientY-r.top;if(x<-9000){x=tx;y=ty}
       // sobre texto, links ou cards, o círculo colorido se apaga
-      kt=e.target.closest("h1,h2,h3,p,a,button,input,li,.clip,.feed,.mark,.sub,.crumbs,.about-lead")?0:1;go()});
+      kt=e.target.closest("h1,h2,h3,p,a,button,input,li,.clip,.feed,.mark,.sub,.crumbs,.about-lead,.lens")?0:1;go()});
     hero.addEventListener("pointerleave",()=>{kt=0;go()});
   }
   if(window.ResizeObserver)new ResizeObserver(size).observe(hero);else{size();addEventListener("resize",size)}
@@ -991,7 +1177,7 @@ function renderFeed(){
   trk.innerHTML=html+html;
   requestAnimationFrame(()=>{trk.style.animationDuration=(trk.scrollWidth/2/45)+"s"});
 }
-function afterInicio(){renderFeed();try{halftone()}catch(e){}if(!$("#dseg"))return;renderDemo();$("#dseg").addEventListener("click",e=>{const b=e.target.closest("[data-demo]");if(!b)return;critDemo=b.dataset.demo;document.querySelectorAll("[data-demo]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.demo===critDemo));renderDemo()})}
+function afterInicio(){try{halftone()}catch(e){}try{lentes()}catch(e){}if(!$("#dseg"))return;renderDemo();$("#dseg").addEventListener("click",e=>{const b=e.target.closest("[data-demo]");if(!b)return;critDemo=b.dataset.demo;document.querySelectorAll("[data-demo]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.demo===critDemo));renderDemo()})}
 
 /* =====================================================================
    TEMAS — índice gigante com prévia que segue o mouse + faixa horizontal
@@ -1467,6 +1653,131 @@ function viewSobre(){
 function notFound(){return `<section class="ph-head" data-tone="light"><div class="wrap"><h1 class="D">Não encontrado</h1><p><a class="more" href="#inicio">Voltar ao início</a></p></div></section>`}
 
 /* ── Roteador ── */
+/* =====================================================================
+   PAINEL — o que está acontecendo, de forma direta
+   ===================================================================== */
+const PERIODOS=[{id:"7",nome:"Últimos 7 dias",d:7},{id:"30",nome:"Últimos 30 dias",d:30},{id:"tudo",nome:"Tudo",d:null}];
+let perP="30", critPn="tipo";
+// cores dos temas: as três cores de destaque do site, na mesma ordem usada na aba Temas
+const TEMA_IDX=t=>Math.max(0,MOCK.temas.findIndex(x=>x.id===t))%3;
+const TEMA_COR=new Proxy({},{get:(_,t)=>AV[TEMA_IDX(t)]}), TEMA_ON=new Proxy({},{get:(_,t)=>["var(--on1)","var(--on2)","var(--on3)"][TEMA_IDX(t)]});
+const fmtN=n=>Number(n).toLocaleString("pt-BR");
+function painelDados(dias){
+  const itens=[];
+  MOCK.subtemas.forEach(s=>(MOCK.noticias[s.id]||[]).forEach(n=>itens.push({s,n,t:+new Date(n.data||s.data||0)})));
+  const tmax=Math.max(...itens.map(x=>x.t)), dia=864e5;
+  const noPer=x=>!dias||x.t>tmax-dias*dia, noAnt=x=>dias&&x.t<=tmax-dias*dia&&x.t>tmax-2*dias*dia;
+  const atual=itens.filter(noPer), anterior=itens.filter(noAnt);
+  const subs=MOCK.subtemas.filter(s=>!dias||+new Date(s.data)>tmax-dias*dia);
+  const conta=(lista,chave)=>lista.reduce((o,x)=>{const k=chave(x);o[k]=(o[k]||0)+1;return o},{});
+  const porTema=conta(atual,x=>x.s.tema), porTemaAnt=conta(anterior,x=>x.s.tema), porPortal=conta(atual,x=>x.n.portal);
+  const matriz={};atual.forEach(x=>{(matriz[x.n.portal]=matriz[x.n.portal]||{})[x.s.tema]=(matriz[x.n.portal][x.s.tema]||0)+1});
+  const primeiro={}, cobertura={};
+  subs.forEach(s=>{const ns=(MOCK.noticias[s.id]||[]).filter(n=>n.data);if(ns.length){const p=ns.reduce((a,b)=>new Date(a.data)<=new Date(b.data)?a:b).portal;primeiro[p]=(primeiro[p]||0)+1}
+    new Set((MOCK.noticias[s.id]||[]).map(n=>n.portal)).forEach(p=>cobertura[p]=(cobertura[p]||0)+1)});
+  // classificação: só entra o que passou da confiança mínima
+  const cls=(n,c)=>{const r=Classificador.resultado(n,c);return r.classificada?r.opcao:null};
+  const vies={porTema:[{},{},{}],porPortal:{},total:[0,0,0]};
+  const crit={};CRITERIOS.forEach(c=>crit[c.id]={});
+  atual.forEach(({s,n})=>{
+    const v=cls(n,"vies");if(v!==null){vies.total[v]++;vies.porTema[v][s.tema]=(vies.porTema[v][s.tema]||0)+1;(vies.porPortal[n.portal]=vies.porPortal[n.portal]||[0,0,0])[v]++}
+    CRITERIOS.forEach(c=>{const o=cls(n,c.id);if(o!==null)(crit[c.id][n.portal]=crit[c.id][n.portal]||[0,0,0])[o]++});
+  });
+  return {tmax,dias,noticias:atual.length,subs,porTema,porTemaAnt,porPortal,matriz,primeiro,cobertura,vies,crit,temAnterior:anterior.length>0};
+}
+const tipAttr=t=>`data-tip="${esc(t)}" tabindex="0"`;
+const linkTema=id=>`<a class="nm" href="#tema-${id}">${esc(temaNome(id))}</a>`;
+const linkPortal=id=>`<a class="nm" href="#portais" data-goportal="${id}">${esc(portalNome(id))}</a>`;
+function barras(linhas,max,cor){
+  return `<div class="pn-bars">${linhas.map(l=>`<div class="pn-row">${l.nome}<div class="pn-track" ${tipAttr(l.tip)}><div class="pn-fill" style="width:${max?Math.max(1.5,l.v/max*100):0}%;background:${l.cor||cor||"var(--a3)"}"></div></div><span class="val">${l.txt}</span></div>`).join("")}</div>`;
+}
+function pilha(vals,opcoes,tip){
+  const t=vals.reduce((a,b)=>a+b,0)||1;
+  return `<div class="pn-stack">${vals.map((v,i)=>v?`<i style="width:${v/t*100}%;background:${AV[i]};color:${i===2?"var(--on3)":"var(--on1)"}" ${tipAttr(`${tip}: ${opcoes[i]}, ${Math.round(v/t*100)}% (${fmtN(v)})`)}>${v/t>=.12?Math.round(v/t*100)+"%":""}</i>`:"").join("")}</div>`;
+}
+const legenda=opcoes=>`<div class="pn-legend">${opcoes.map((o,i)=>`<span style="--c:${AV[i]}">${esc(o)}</span>`).join("")}</div>`;
+const espera=(titulo,txt)=>`<div class="pn-wait"><b>${esc(titulo)}</b><span>${esc(txt)}</span></div>`;
+function viewPainel(){
+  return `
+  <section class="ph-head fxbg" id="painel-head" data-tone="light"><canvas class="halftone" aria-hidden="true"></canvas><div class="wrap">
+    <h1 class="D" data-r>Painel</h1>
+  </div></section>
+  <section class="s" data-tone="light" style="padding-top:0"><div class="wrap">
+    <div class="pn-top" data-r><p>O que está acontecendo agora, direto nos números: os assuntos que dominam, quem publica mais sobre cada um e como cada portal escreve.</p>
+      <div class="seg" id="perseg" role="group" aria-label="Período">${PERIODOS.map(p=>`<button type="button" data-per="${p.id}" aria-pressed="${p.id===perP}">${p.nome}</button>`).join("")}</div></div>
+    <div class="pn-body" id="pn-body"></div>
+  </div></section>`;
+}
+function renderPainel(){
+  const per=PERIODOS.find(p=>p.id===perP), D=painelDados(per.d), box=$("#pn-body"); if(!box) return;
+  const temas=MOCK.temas.map(t=>t.id), portais=MOCK.portais.map(p=>p.id);
+  const ate=fmtData(new Date(D.tmax).toISOString());
+  const topTema=temas.slice().sort((a,b)=>(D.porTema[b]||0)-(D.porTema[a]||0))[0];
+  const topPortal=portais.slice().sort((a,b)=>(D.porPortal[b]||0)-(D.porPortal[a]||0))[0];
+  const pctTema=D.noticias?Math.round((D.porTema[topTema]||0)/D.noticias*100):0;
+  const kpis=`<div class="pn-kpis">
+    <div class="pn-card pn-kpi k1"><span class="lbl">Notícias comparadas</span><b>${fmtN(D.noticias)}</b><span class="det">${per.d?per.nome.toLowerCase()+", até "+ate:"desde o início da coleta"}</span></div>
+    <div class="pn-card pn-kpi k2"><span class="lbl">Acontecimentos</span><b>${fmtN(D.subs.length)}</b><span class="det">cobertos por ${CONFIG.minPortais} ou mais portais</span></div>
+    <div class="pn-card pn-kpi k3"><span class="lbl">Assunto dominante</span><b class="nome"><a href="#tema-${topTema}">${esc(temaNome(topTema))}</a></b><span class="det">${pctTema}% das notícias do período</span></div>
+    <div class="pn-card pn-kpi k4"><span class="lbl">Portal que mais publicou</span><b class="nome"><a href="#portais" data-goportal="${topPortal}">${esc(portalNome(topPortal))}</a></b><span class="det">${fmtN(D.porPortal[topPortal]||0)} notícias no período</span></div></div>`;
+  // temas em alta, com a variação em relação ao período anterior de mesmo tamanho
+  const maxT=Math.max(...temas.map(t=>D.porTema[t]||0),1);
+  const linhasT=temas.slice().sort((a,b)=>(D.porTema[b]||0)-(D.porTema[a]||0)).map(t=>{
+    const v=D.porTema[t]||0, a=D.porTemaAnt[t]||0, pct=D.noticias?Math.round(v/D.noticias*100):0;
+    let dv="";if(per.d&&D.temAnterior){const d=a?Math.round((v-a)/a*100):null;dv=d===null?(v?`<small class="up">novo</small>`:""):`<small class="${d>=0?"up":"dn"}">${d>=0?"▲":"▼"} ${Math.abs(d)}%</small>`}
+    return {nome:linkTema(t),cor:"var(--a3)",v,txt:`${pct}%${dv}`,tip:`${temaNome(t)}: ${fmtN(v)} notícias, ${pct}% do período`+(per.d&&D.temAnterior?` (antes: ${fmtN(a)})`:"")};
+  });
+  const cardTemas=`<div class="pn-card s5"><h2>Assuntos em alta</h2><p class="pn-sub">Parcela das notícias de cada tema${per.d&&D.temAnterior?" e a variação em relação aos "+per.d+" dias anteriores":""}.</p>${barras(linhasT,maxT)}</div>`;
+  // quem fala mais de cada tema
+  const maxCol={};temas.forEach(t=>maxCol[t]=Math.max(...portais.map(p=>(D.matriz[p]||{})[t]||0),1));
+  const totCol={};temas.forEach(t=>totCol[t]=portais.reduce((a,p)=>a+((D.matriz[p]||{})[t]||0),0)||1);
+  const heat=`<div class="pn-heat"><table><thead><tr><th></th>${temas.map(t=>`<th scope="col"><a href="#tema-${t}"><i class="pn-dot" style="--c:${TEMA_COR[t]}"></i>${esc(temaNome(t))}</a></th>`).join("")}</tr></thead><tbody>${portais.map(p=>`<tr><th scope="row">${esc(portalNome(p))}</th>${temas.map(t=>{const v=(D.matriz[p]||{})[t]||0,q=Math.round(v/maxCol[t]*100),top=v&&v===maxCol[t];
+      return `<td class="${top?"top":""}" style="--q:${v?Math.max(4,q):0}%;--c:${TEMA_COR[t]}" ${tipAttr(`${portalNome(p)} publicou ${fmtN(v)} notícias de ${temaNome(t)}: ${Math.round(v/totCol[t]*100)}% do tema`)}><span>${fmtN(v)}</span><i></i></td>`}).join("")}</tr>`).join("")}</tbody></table></div>`;
+  const cardHeat=`<div class="pn-card s7"><h2>Quem fala mais sobre cada tema</h2><p class="pn-sub">Notícias publicadas por portal em cada tema. Em cada coluna, a barra mostra o peso de cada portal e o contorno marca quem mais publicou.</p>${heat}</div>`;
+  // quem chega primeiro e cobertura
+  const nS=D.subs.length||1, maxP=Math.max(...portais.map(p=>D.primeiro[p]||0),1);
+  const linhasP=portais.slice().sort((a,b)=>(D.primeiro[b]||0)-(D.primeiro[a]||0)).map(p=>{const v=D.primeiro[p]||0;return {nome:linkPortal(p),v,txt:`${Math.round(v/nS*100)}%<small>${fmtN(v)}</small>`,tip:`${portalNome(p)} publicou primeiro em ${fmtN(v)} de ${fmtN(D.subs.length)} acontecimentos`}});
+  const linhasC=portais.slice().sort((a,b)=>(D.cobertura[b]||0)-(D.cobertura[a]||0)).map(p=>{const v=D.cobertura[p]||0;return {nome:linkPortal(p),v,txt:`${Math.round(v/nS*100)}%`,tip:`${portalNome(p)} cobriu ${fmtN(v)} de ${fmtN(D.subs.length)} acontecimentos`}});
+  const cardPrim=`<div class="pn-card s6"><h2>Quem chega primeiro</h2><p class="pn-sub">Em quantos acontecimentos cada portal publicou antes dos outros.</p>${barras(linhasP,maxP,"var(--a2)")}</div>`;
+  const cardCob=`<div class="pn-card s6"><h2>Quem cobre mais</h2><p class="pn-sub">Parcela dos acontecimentos do período em que cada portal aparece.</p>${barras(linhasC,nS,"var(--a1)")}</div>`;
+  // esquerda e direita
+  const V=CRITERIOS.find(c=>c.id==="vies"), temVies=V&&D.vies.total[0]+D.vies.total[2]>0;
+  let cardVies;
+  if(!temVies){cardVies=`<div class="pn-card"><h2>Esquerda e direita</h2><p class="pn-sub">Os assuntos que mais aparecem nas notícias classificadas com viés de esquerda e de direita, e o perfil de cada portal.</p>${espera("Aparece quando a classificação terminar","Este quadro usa o critério “Viés político”. Assim que as notícias forem classificadas, ele mostra os temas principais de cada lado e o perfil de cada portal.")}</div>`}
+  else{
+    const te=D.vies.total[0]||1, td=D.vies.total[2]||1;
+    const ord=temas.slice().sort((a,b)=>((D.vies.porTema[0][b]||0)/te+(D.vies.porTema[2][b]||0)/td)-((D.vies.porTema[0][a]||0)/te+(D.vies.porTema[2][a]||0)/td));
+    const mx=Math.max(...ord.map(t=>Math.max((D.vies.porTema[0][t]||0)/te,(D.vies.porTema[2][t]||0)/td)),.01);
+    const bfly=`<div class="pn-bhead"><span>${esc(V.opcoes[0])}</span><span></span><span>${esc(V.opcoes[2])}</span></div><div class="pn-bfly">${ord.map(t=>{const e=(D.vies.porTema[0][t]||0)/te,d=(D.vies.porTema[2][t]||0)/td;
+      return `<div class="pn-brow"><div class="l"><small>${Math.round(e*100)}%</small><div class="pn-track" ${tipAttr(`${temaNome(t)}: ${Math.round(e*100)}% das notícias com viés de esquerda`)}><div class="pn-fill" style="width:${e/mx*100}%;background:${AV[0]}"></div></div></div><span class="c">${linkTema(t)}</span><div class="r"><div class="pn-track" ${tipAttr(`${temaNome(t)}: ${Math.round(d*100)}% das notícias com viés de direita`)}><div class="pn-fill" style="width:${d/mx*100}%;background:${AV[2]}"></div></div><small>${Math.round(d*100)}%</small></div></div>`}).join("")}</div>`;
+    const perfis=`<div class="pn-bars" style="margin-top:22px">${legenda(V.opcoes)}${portais.map(p=>`<div class="pn-srow">${linkPortal(p)}${pilha(D.vies.porPortal[p]||[0,0,0],V.opcoes,portalNome(p))}</div>`).join("")}</div>`;
+    cardVies=`<div class="pn-card"><h2>Esquerda e direita</h2><p class="pn-sub">Temas principais entre as notícias classificadas com viés de esquerda e de direita (porcentagem de cada lado), e o perfil de cada portal.</p>${bfly}${perfis}</div>`;
+  }
+  // como cada portal escreve
+  const C=CRITERIOS.find(c=>c.id===critPn)||CRITERIOS[0], temCrit=Object.keys(D.crit[C.id]).length>0;
+  const cardCrit=`<div class="pn-card"><h2>Como cada portal escreve</h2><p class="pn-sub">Distribuição das notícias de cada portal no critério escolhido. Só entram classificações com confiança acima de ${Math.round(CONFIG.confiancaMinima*100)}%.</p>
+    <div class="seg" id="pnseg" role="group" aria-label="Critério" style="margin-bottom:18px">${CRITERIOS.filter(c=>c.id!=="vies").map(c=>`<button type="button" data-pnc="${c.id}" aria-pressed="${c.id===C.id}">${esc(c.nome)}</button>`).join("")}</div>
+    ${temCrit?`${legenda(C.opcoes)}<div class="pn-bars">${portais.map(p=>`<div class="pn-srow">${linkPortal(p)}${pilha(D.crit[C.id][p]||[0,0,0],C.opcoes,portalNome(p))}</div>`).join("")}</div>`:espera("Aparece quando a classificação terminar","Este quadro compara o tipo de conteúdo, o tom das manchetes, a profundidade e a postura de cada portal.")}</div>`;
+  box.innerHTML=kpis+cardTemas+cardHeat+cardPrim+cardCob+cardVies+cardCrit;
+  box.style.animation="none";box.offsetWidth;box.style.animation="";
+  try{initSegs()}catch(e){}
+}
+function dicas(){
+  let tip=$("#pn-tip");if(!tip){tip=document.createElement("div");tip.id="pn-tip";tip.className="pn-tip";tip.setAttribute("role","tooltip");document.body.appendChild(tip)}
+  const mostra=(el,x,y)=>{tip.textContent=el.dataset.tip;tip.style.left=Math.min(innerWidth-140,Math.max(140,x))+"px";tip.style.top=y+"px";tip.classList.add("on")};
+  const box=$("#pn-body");
+  box.addEventListener("pointermove",e=>{const el=e.target.closest("[data-tip]");el?mostra(el,e.clientX,e.clientY):tip.classList.remove("on")});
+  box.addEventListener("pointerleave",()=>tip.classList.remove("on"));
+  box.addEventListener("focusin",e=>{const el=e.target.closest("[data-tip]");if(el){const r=el.getBoundingClientRect();mostra(el,r.left+r.width/2,r.top)}});
+  box.addEventListener("focusout",()=>tip.classList.remove("on"));
+  addEventListener("scroll",()=>tip.classList.remove("on"),{passive:true});
+}
+function afterPainel(){
+  try{halftone($("#painel-head"))}catch(e){}
+  renderPainel();dicas();
+  $("#perseg").addEventListener("click",e=>{const b=e.target.closest("[data-per]");if(!b)return;perP=b.dataset.per;document.querySelectorAll("[data-per]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.per===perP));renderPainel()});
+  $("#pn-body").addEventListener("click",e=>{const b=e.target.closest("[data-pnc]");if(!b)return;critPn=b.dataset.pnc;renderPainel()});
+}
 async function route(){
   const h=(location.hash||"#inicio").slice(1);
   let html, after=()=>{}, tab="inicio";
@@ -1474,6 +1785,7 @@ async function route(){
   else if(h.startsWith("tema-")){html=await viewTema(h.slice(5));after=()=>{try{halftone($("#fx-head"))}catch(e){}};tab="temas"}
   else if(h.startsWith("sub-")){html=await viewSub(h.slice(4));after=afterSub;tab="temas"}
   else if(h==="portais"){html=await viewPortais();after=afterPortais;tab="portais"}
+  else if(h==="painel"){html=viewPainel();after=afterPainel;tab="painel"}
   else if(h==="metodologia"){html=viewMetodologia();after=afterMetodologia;tab="metodologia"}
   else if(h==="sobre"){html=viewSobre();after=()=>{try{halftone($("#fx-head"))}catch(e){}};tab="sobre"}
   else {html=await viewInicio();after=afterInicio}
@@ -1541,6 +1853,11 @@ addEventListener("keydown",e=>{if(e.key==="Escape")closeSearch();if(e.key==="/"&
 $("#search-res").addEventListener("click",e=>{const a=e.target.closest("a");if(!a)return;
   if(a.dataset.goportal){portalSel=a.dataset.goportal;if(location.hash==="#portais"){e.preventDefault();route()}}
   closeSearch();
+});
+/* Logo do topo: cada clique amassa e solta a palavra entre as linhas */
+document.querySelectorAll("header .logo").forEach(l=>{
+  l.addEventListener("click",()=>{l.classList.remove("amassa");void l.offsetWidth;l.classList.add("amassa")});
+  l.addEventListener("animationend",e=>{if(e.animationName==="ew-palavra")l.classList.remove("amassa")});
 });
 addEventListener("hashchange",route);
 route();

@@ -21,3 +21,6 @@ embeddings.npz
 diagnostico.html
 /capas/
 /pacote_classificacao/
+
+# Vercel
+.vercel

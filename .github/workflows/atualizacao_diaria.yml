@@ -21,6 +21,7 @@ jobs:
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
     steps:
       - name: Baixar o código
@@ -106,8 +107,14 @@ jobs:
             git push
           fi
 
-      - name: Avisar o Vercel
+      - name: Publicar atualizacao no Vercel
         env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
         run: |
-          if [ -n "$HOOK" ]; then curl -fsS -X POST "$HOOK" > /dev/null && echo "Vercel avisado."; fi
+          if [ -n "$VERCEL_TOKEN" ]; then
+            npx vercel deploy site --prod --token "$VERCEL_TOKEN" --yes --project entrelinhas
+            echo "Site publicado com sucesso no Vercel via Token."
+          elif [ -n "$HOOK" ]; then
+            curl -fsS -X POST "$HOOK" > /dev/null && echo "Vercel avisado via Deploy Hook."
+          fi

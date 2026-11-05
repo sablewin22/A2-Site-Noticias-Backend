@@ -12,6 +12,7 @@ embeddings.npz
 
 # Chaves de API: NUNCA enviar
 .gemini_key
+.groq_key
 .typesafe_key
 .env
 

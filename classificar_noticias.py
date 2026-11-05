@@ -137,6 +137,7 @@ DIMENSOES = {
             "meio_ambiente": "Clima, desmatamento, queimadas, poluição, enchentes e secas.",
             "esporte": "Futebol e demais esportes, atletas, campeonatos e competições.",
             "cultura": "Cinema, música, shows, festivais, livros, teatro e exposições.",
+            "entretenimento": "Celebridades, fofocas, vida pessoal de famosos, realities, influenciadores e curiosidades.",
         },
         "precisa_texto": False,
     },

@@ -40,6 +40,7 @@ TEMAS_SITE = {
     "politica": "politica", "economia": "economia", "saude": "saude", "educacao": "educacao",
     "meio_ambiente": "meio-ambiente", "esporte": "esporte",
     "cultura": "cultura",
+    "entretenimento": "entretenimento",
 }
 ORDEM_TEMAS = list(TEMAS_SITE)  # desempate
 # classificação: coluna no banco -> (id do critério no site, rótulos na ordem das colunas)

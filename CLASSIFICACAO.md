@@ -115,13 +115,16 @@ python preparar_pacote.py --importar classificado.zip
 
 ## Os critérios
 
-| Critério | Rótulos | O que o modelo lê |
+| Dimensão | Rótulos | Escopo de Leitura |
 |---|---|---|
 | Tipo de conteúdo | informativa, analítica, opinativa | título + texto |
 | Tom da manchete | negativo, neutro, positivo | só o título |
 | Profundidade | superficial, intermediária, aprofundada | título + texto |
 | Postura | a favor, neutra, contra | título + texto |
-| Tema principal | os 7 temas | título + texto |
+| Viés político | esquerda, neutro, direita | título + texto |
+| Tema principal | os 8 temas da coleta | título (+ texto se houver) |
+
+> **Nota Metodológica (Texto Curto / Vídeo):** Notícias com menos de 80 palavras (ex.: matérias em formato de vídeo ou enquetes) são marcadas com `texto_insuficiente = 1`. Nessas notícias, o modelo classifica estritamente o **Tom da Manchete** e o **Tema Principal** a partir do título. As 4 dimensões que dependem de corpo de texto (`tipo`, `profundidade`, `postura` e `vies_politico`) ficam nulas (`NULL`).
 
 As definições de cada rótulo estão em `DIMENSOES`, no começo de
 `classificar_noticias.py`. Mudar o texto lá muda a classificação; combine com o

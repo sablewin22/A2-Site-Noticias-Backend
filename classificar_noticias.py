@@ -15,8 +15,9 @@ avaliação do modelo, não uma probabilidade medida) e uma justificativa de uma
 frase. Confiança abaixo de 0,5 marca a notícia para revisão.
 
 Notícias com texto curto (menos de 80 palavras, ex.: matérias em vídeo)
-recebem só o tom da manchete e o tema; o resto fica vazio e a notícia é
-marcada como texto_insuficiente.
+recebem o tom da manchete e o tema principal (avaliados pelo título);
+as 4 dimensões de corpo (tipo, profundidade, postura e viés político)
+ficam vazias (NULL) e a notícia é marcada como texto_insuficiente.
 
 Instalação:
     pip install requests
@@ -63,7 +64,7 @@ except ImportError:
 ARQ_CHAVE = ".gemini_key"
 MODELO = os.environ.get("GEMINI_MODELO", "gemini-3.5-flash-lite")
 MAX_CARACTERES = 6000      # ~1.500 tokens de texto por notícia
-MIN_PALAVRAS = 80          # abaixo disso: só o tom da manchete
+MIN_PALAVRAS = 80          # abaixo disso: tom da manchete e tema (sem dimensões de corpo)
 CONFIANCA_BAIXA = 0.5      # abaixo disso a classificação é marcada para revisão
 TRABALHADORES = 4          # requisições em paralelo
 
@@ -154,13 +155,24 @@ for barulhento in ("urllib3",):
 
 
 # ------------------------------------------------------------- chave
-def carregar_chave():
+def carregar_chaves():
+    chaves = []
     if os.environ.get("GEMINI_API_KEY"):
-        return os.environ["GEMINI_API_KEY"].strip()
+        chaves.extend([k.strip() for k in os.environ["GEMINI_API_KEY"].split(",") if k.strip()])
     if os.path.exists(ARQ_CHAVE):
         with open(ARQ_CHAVE, encoding="utf-8") as f:
-            return f.read().strip()
-    raise SystemExit("Chave não encontrada. Rode: python classificar_noticias.py --salvar-chave")
+            for linha in f:
+                linha = linha.split("#")[0].strip()
+                if linha:
+                    chaves.append(linha)
+    if not chaves:
+        raise SystemExit("Chave não encontrada. Rode: python classificar_noticias.py --salvar-chave")
+    return list(dict.fromkeys(chaves))
+
+
+def carregar_chave():
+    chaves = carregar_chaves()
+    return chaves[0]
 
 
 def salvar_chave():
@@ -340,18 +352,19 @@ def gravar(con, noticia_id, res):
 
 
 def executar(con, limite, portal, trabalhadores, min_portais=3):
-    chave_api = carregar_chave()
+    chaves = carregar_chaves()
     linhas = pendentes(con, limite, portal, min_portais)
     if not linhas:
         print("Nenhuma notícia pendente.")
         return
-    log.info("Classificando %d notícias com o %s, %d requisições em paralelo...",
-             len(linhas), MODELO, trabalhadores)
+    num_workers = max(trabalhadores, len(chaves))
+    log.info("Classificando %d notícias com o %s (%d chaves em rodízio circular, %d workers em paralelo)...",
+             len(linhas), MODELO, len(chaves), num_workers)
 
     feitos = erros = curtos = 0
-    with ThreadPoolExecutor(trabalhadores) as pool:
-        futuros = {pool.submit(classificar_uma, chave_api, titulo, texto, n): id_
-                   for id_, _portal, titulo, texto, n in linhas}
+    with ThreadPoolExecutor(num_workers) as pool:
+        futuros = {pool.submit(classificar_uma, chaves[i % len(chaves)], titulo, texto, n): id_
+                   for i, (id_, _portal, titulo, texto, n) in enumerate(linhas)}
         try:
             for futuro in as_completed(futuros):
                 id_ = futuros[futuro]
@@ -369,7 +382,7 @@ def executar(con, limite, portal, trabalhadores, min_portais=3):
                 feitos += 1
                 if feitos % 25 == 0 or feitos == len(linhas):
                     con.commit()
-                    log.info("[%d/%d] erros: %d | só manchete: %d",
+                    log.info("[%d/%d] erros: %d | manchete e tema (curtos): %d",
                              feitos, len(linhas), erros, curtos)
         except KeyboardInterrupt:
             log.info("Interrompido. O que já foi classificado está salvo.")
@@ -438,7 +451,7 @@ def mostrar_stats(con):
     insuf, revisar = con.execute(
         """SELECT SUM(texto_insuficiente), SUM(revisar) FROM classificacoes
            WHERE erro IS NULL""").fetchone()
-    print(f"\nClassificadas: {total} | só manchete (texto curto): {insuf} | "
+    print(f"\nClassificadas: {total} | manchete e tema (texto curto): {insuf} | "
           f"confiança baixa (revisar): {revisar}")
 
     for chave, d in DIMENSOES.items():
@@ -568,7 +581,7 @@ def main():
         linhas = pendentes(con, None, args.portal, args.min_portais)
         curtas = sum(1 for l in linhas if (l[4] or 0) < MIN_PALAVRAS)
         print(f"{len(linhas)} notícias para classificar "
-              f"({curtas} com texto curto, que recebem só o tom da manchete e o tema).")
+              f"({curtas} com texto curto, que recebem o tom da manchete e o tema).")
     elif args.stats:
         mostrar_stats(con)
     elif args.temas_grupos:

@@ -42,9 +42,9 @@ html.js [data-r="left"]{transform:translateX(-60px)}
 header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--bg);border-bottom:1px solid var(--line);transition:background-color .7s,border-color .7s}
 header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:12px}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-/* Logo do topo: a palavra fica entre duas linhas; ao clicar, as linhas a amassam e soltam */
-.logo .ew{position:relative;display:inline-block;padding:5px 2px}
-.logo .ew::before,.logo .ew::after{content:"";position:absolute;left:0;right:0;height:2px;border-radius:2px;background:currentColor;opacity:.28}
+/* Logo do topo: ao clicar, a palavra amassa e solta */
+.logo .ew{position:relative;display:inline-block}
+.logo .ew::before,.logo .ew::after{content:none}
 .logo .ew::before{top:0;--y:5px}.logo .ew::after{bottom:0;--y:-5px}
 .logo .ew b{display:inline-block;transform-origin:50% 55%}
 .logo.amassa .ew::before,.logo.amassa .ew::after{animation:ew-linha .9s cubic-bezier(.5,0,.3,1) both}
@@ -223,9 +223,11 @@ header.top .tabs{margin-left:auto}
 .pn-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--c)}
 .pn-heat td.top{font-weight:800;box-shadow:inset 0 0 0 2px var(--c)}
 .pn-note{margin:12px 0 0;font-size:.85rem;color:var(--muted)}
-.pn-stack{display:flex;gap:2px;height:28px}
+.pn-stack{display:flex;height:28px;border-radius:6px;overflow:hidden}
 .pn-stack i{display:grid;place-items:center;min-width:0;font-style:normal;font-size:.78rem;font-weight:700;overflow:hidden;white-space:nowrap}
-.pn-stack i:first-child{border-radius:6px 0 0 6px}.pn-stack i:last-child{border-radius:0 6px 6px 0}
+.pn-stack i+i{margin-left:2px}.pn-stack i.z{margin-left:0}
+.pn-stack i{transition:width .7s cubic-bezier(.2,.8,.2,1),margin .7s cubic-bezier(.2,.8,.2,1)}
+.pn-crit-legend{transition:opacity .25s}
 .pn-srow{display:grid;grid-template-columns:minmax(84px,128px) minmax(0,1fr);gap:12px;align-items:center;font-size:.92rem}
 .pn-legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin:0 0 14px;font-size:.88rem;color:var(--muted)}
 .pn-legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px;background:var(--c)}
@@ -699,12 +701,14 @@ footer ul a:hover{color:var(--fg)}
     <div><h4>Equipe</h4><ul>
       <li>Jamilly Medeiros</li><li>João Vianna</li><li>Julia Cereja</li><li>Sabrina Azulay Lewin</li></ul></div>
   </div>
+  <p style="margin:18px 0 0;font-size:.8rem;opacity:.55"><a href="#diagnostico" style="color:inherit">Diagnóstico do navegador</a></p>
   <div class="foot-mark" aria-hidden="true">Entrelinhas</div>
 </div></footer>
 
 
 <script type="application/json" id="fotos-idx">__FOTOS_IDX__</script>
 <script type="application/json" id="dados-reais">__DADOS__</script>
+<script>window.__erros=[];addEventListener("error",function(e){window.__erros.push(String(e.message||e))});</script>
 <script>
 document.documentElement.classList.add("js");
 const $=(s,el=document)=>el.querySelector(s);
@@ -1054,7 +1058,6 @@ async function viewInicio(){
     <figure class="lens" id="lens" data-r="scale" style="--d:.2s">
       <div class="lens-stage" aria-hidden="true">
         <div class="lp" style="--k:8"><i class="ln ln1"></i></div><div class="lp" style="--k:14"><i class="ln ln2"></i></div><div class="lp" style="--k:20"><i class="ln ln3"></i></div>
-        <span class="ll ll1">G1</span><span class="ll ll2">CNN Brasil</span><span class="ll ll3">Metrópoles</span>
       </div>
     </figure>
   </div></section>
@@ -1117,11 +1120,8 @@ function cardDestaque(s,i){
 let lentesVistas=false;
 function lentes(){
   const st=$("#lens .lens-stage"); if(!st) return;
-  const nomes=MOCK.portais.map(p=>p.nome), ls=[...st.querySelectorAll(".ll")]; let k=0;
-  const troca=()=>{ls.forEach((l,j)=>{l.textContent=nomes[(k+j)%nomes.length]});k=(k+3)%nomes.length};
-  troca();
   const toca=()=>{if(reduce||st.classList.contains("play"))return;st.classList.add("play")};
-  st.querySelector(".ln3").addEventListener("animationend",()=>{st.classList.remove("play");troca()});
+  st.querySelector(".ln3").addEventListener("animationend",()=>st.classList.remove("play"));
   st.addEventListener("pointerenter",toca);
   st.addEventListener("click",toca);
   // na primeira vez que a página inicial aparece, roda sozinha
@@ -1693,10 +1693,30 @@ function barras(linhas,max,cor){
 }
 function pilha(vals,opcoes,tip){
   const t=vals.reduce((a,b)=>a+b,0)||1;
-  return `<div class="pn-stack">${vals.map((v,i)=>v?`<i style="width:${v/t*100}%;background:${AV[i]};color:${i===2?"var(--on3)":"var(--on1)"}" ${tipAttr(`${tip}: ${opcoes[i]}, ${Math.round(v/t*100)}% (${fmtN(v)})`)}>${v/t>=.12?Math.round(v/t*100)+"%":""}</i>`:"").join("")}</div>`;
+  return `<div class="pn-stack">${vals.map((v,i)=>`<i class="${v?"":"z"}" style="width:${v/t*100}%;background:${AV[i]};color:${i===2?"var(--on3)":"var(--on1)"}" ${tipAttr(`${tip}: ${opcoes[i]}, ${Math.round(v/t*100)}% (${fmtN(v)})`)}>${v/t>=.12?Math.round(v/t*100)+"%":""}</i>`).join("")}</div>`;
 }
 const legenda=opcoes=>`<div class="pn-legend">${opcoes.map((o,i)=>`<span style="--c:${AV[i]}">${esc(o)}</span>`).join("")}</div>`;
 const espera=(titulo,txt)=>`<div class="pn-wait"><b>${esc(titulo)}</b><span>${esc(txt)}</span></div>`;
+let painelAtual=null;
+function critHTML(D,C,temCrit,portais){
+  return temCrit?`<div class="pn-crit-legend">${legenda(C.opcoes)}</div><div class="pn-bars">${portais.map(p=>`<div class="pn-srow" data-pp="${p}">${linkPortal(p)}${pilha(D.crit[C.id][p]||[0,0,0],C.opcoes,portalNome(p))}</div>`).join("")}</div>`
+    :espera("Aparece quando a classificação terminar","Este quadro compara o tipo de conteúdo, o tom das manchetes, a profundidade e a postura de cada portal.");
+}
+/* troca de critério: o botão desliza, a legenda troca e as barras crescem/encolhem até os novos valores */
+function trocaCriterio(id){
+  critPn=id; const D=painelAtual, box=$("#pn-crit"); if(!D||!box) return;
+  document.querySelectorAll("[data-pnc]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.pnc===id));
+  const C=CRITERIOS.find(c=>c.id===id), portais=MOCK.portais.map(p=>p.id), temCrit=Object.keys(D.crit[C.id]).length>0;
+  const linhas=box.querySelectorAll(".pn-srow");
+  if(!temCrit||!linhas.length||reduce){box.innerHTML=critHTML(D,C,temCrit,portais);return}
+  const leg=box.querySelector(".pn-crit-legend");leg.style.opacity=0;
+  setTimeout(()=>{leg.innerHTML=legenda(C.opcoes);leg.style.opacity=1},250);
+  const novo=document.createElement("div");novo.innerHTML=critHTML(D,C,temCrit,portais);
+  linhas.forEach(l=>{const n=novo.querySelector(`.pn-srow[data-pp="${l.dataset.pp}"]`);if(!n)return;
+    const velhos=l.querySelectorAll(".pn-stack i"), novos=n.querySelectorAll(".pn-stack i");
+    velhos.forEach((v,i)=>{const x=novos[i];v.style.width=x.style.width;v.className=x.className;v.dataset.tip=x.dataset.tip;v.textContent="";
+      setTimeout(()=>{v.textContent=x.textContent},450)})});
+}
 function viewPainel(){
   return `
   <section class="ph-head fxbg" id="painel-head" data-tone="light"><canvas class="halftone" aria-hidden="true"></canvas><div class="wrap">
@@ -1757,7 +1777,8 @@ function renderPainel(){
   const C=CRITERIOS.find(c=>c.id===critPn)||CRITERIOS[0], temCrit=Object.keys(D.crit[C.id]).length>0;
   const cardCrit=`<div class="pn-card"><h2>Como cada portal escreve</h2><p class="pn-sub">Distribuição das notícias de cada portal no critério escolhido. Só entram classificações com confiança acima de ${Math.round(CONFIG.confiancaMinima*100)}%.</p>
     <div class="seg" id="pnseg" role="group" aria-label="Critério" style="margin-bottom:18px">${CRITERIOS.filter(c=>c.id!=="vies").map(c=>`<button type="button" data-pnc="${c.id}" aria-pressed="${c.id===C.id}">${esc(c.nome)}</button>`).join("")}</div>
-    ${temCrit?`${legenda(C.opcoes)}<div class="pn-bars">${portais.map(p=>`<div class="pn-srow">${linkPortal(p)}${pilha(D.crit[C.id][p]||[0,0,0],C.opcoes,portalNome(p))}</div>`).join("")}</div>`:espera("Aparece quando a classificação terminar","Este quadro compara o tipo de conteúdo, o tom das manchetes, a profundidade e a postura de cada portal.")}</div>`;
+    <div id="pn-crit">${critHTML(D,C,temCrit,portais)}</div></div>`;
+  painelAtual=D;
   box.innerHTML=kpis+cardTemas+cardHeat+cardPrim+cardCob+cardVies+cardCrit;
   box.style.animation="none";box.offsetWidth;box.style.animation="";
   try{initSegs()}catch(e){}
@@ -1776,7 +1797,35 @@ function afterPainel(){
   try{halftone($("#painel-head"))}catch(e){}
   renderPainel();dicas();
   $("#perseg").addEventListener("click",e=>{const b=e.target.closest("[data-per]");if(!b)return;perP=b.dataset.per;document.querySelectorAll("[data-per]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.per===perP));renderPainel()});
-  $("#pn-body").addEventListener("click",e=>{const b=e.target.closest("[data-pnc]");if(!b)return;critPn=b.dataset.pnc;renderPainel()});
+  $("#pn-body").addEventListener("click",e=>{const b=e.target.closest("[data-pnc]");if(!b||b.dataset.pnc===critPn)return;trocaCriterio(b.dataset.pnc)});
+}
+/* Diagnóstico (endereço #diagnostico, fora do menu): mostra o que o navegador suporta,
+   para descobrir por que as animações não aparecem num computador. */
+function viewDiag(){
+  const mm=q=>{try{return matchMedia(q).matches}catch(e){return "?"}};
+  const sup=(p,v)=>{try{return CSS.supports(p,v)}catch(e){return false}};
+  const linhas=[
+    ["Navegador",navigator.userAgent],
+    ["Reduzir movimento (sistema)",mm("(prefers-reduced-motion: reduce)")?"LIGADO: o site desliga as animações":"desligado"],
+    ["Animações rodando agora",document.getAnimations?document.getAnimations().length:"não suportado"],
+    ["Animações CSS",sup("animation-name","x")?"ok":"NÃO"],
+    ["IntersectionObserver (seções que aparecem ao rolar)","IntersectionObserver" in window?"ok":"NÃO"],
+    ["Unidades cqw (bolinhas da capa)",sup("width","1cqw")?"ok":"NÃO"],
+    ["color-mix (cores do painel)",sup("color","color-mix(in srgb, red 50%, blue)")?"ok":"NÃO"],
+    ["Erros de script",(window.__erros||[]).length?window.__erros.join(" | "):"nenhum"],
+    ["Tela",innerWidth+"×"+innerHeight+" · densidade "+devicePixelRatio],
+  ];
+  return `<section class="s" data-tone="light"><div class="wrap" style="max-width:860px">
+    <h1 class="D" style="font-size:clamp(2.2rem,5vw,3.6rem)">Diagnóstico</h1>
+    <p style="color:var(--muted)">Tire um print desta tela e mande para quem cuida do site.</p>
+    <table style="width:100%;border-collapse:collapse;margin-top:20px;font-size:.95rem">${linhas.map(([k,v])=>`<tr><th style="text-align:left;padding:10px 12px 10px 0;border-top:1px solid var(--line);vertical-align:top;width:40%">${esc(k)}</th><td style="padding:10px 0;border-top:1px solid var(--line);word-break:break-word">${esc(String(v))}</td></tr>`).join("")}</table>
+    <p style="margin-top:24px"><button class="cta" id="diag-anim" type="button">Testar uma animação</button> <span id="diag-bola" style="display:inline-block;width:28px;height:28px;border-radius:50%;background:var(--a2);vertical-align:middle;margin-left:12px"></span> <span id="diag-res" style="color:var(--muted);margin-left:8px"></span></p>
+  </div></section>`;
+}
+function afterDiag(){
+  $("#diag-anim").addEventListener("click",()=>{const b=$("#diag-bola");
+    try{const a=b.animate([{transform:"translateX(0)"},{transform:"translateX(160px)"},{transform:"translateX(0)"}],{duration:1200});
+      a.onfinish=()=>{$("#diag-res").textContent="a bolinha andou? então animações funcionam neste navegador"}}catch(e){$("#diag-res").textContent="erro: "+e.message}});
 }
 async function route(){
   const h=(location.hash||"#inicio").slice(1);
@@ -1785,6 +1834,7 @@ async function route(){
   else if(h.startsWith("tema-")){html=await viewTema(h.slice(5));after=()=>{try{halftone($("#fx-head"))}catch(e){}};tab="temas"}
   else if(h.startsWith("sub-")){html=await viewSub(h.slice(4));after=afterSub;tab="temas"}
   else if(h==="portais"){html=await viewPortais();after=afterPortais;tab="portais"}
+  else if(h==="diagnostico"){html=viewDiag();after=afterDiag}
   else if(h==="painel"){html=viewPainel();after=afterPainel;tab="painel"}
   else if(h==="metodologia"){html=viewMetodologia();after=afterMetodologia;tab="metodologia"}
   else if(h==="sobre"){html=viewSobre();after=()=>{try{halftone($("#fx-head"))}catch(e){}};tab="sobre"}

@@ -312,6 +312,7 @@ def classificar_uma(chave_api, titulo, texto, n_palavras):
             raise RuntimeError(f"Gemini HTTP {resp.status_code}: {resp.text[:200]}")
         try:
             dados = json.loads(resp.json()["candidates"][0]["content"]["parts"][0]["text"])
+            time.sleep(1.5)
             break
         except (KeyError, IndexError, ValueError) as e:
             ultimo = f"resposta inesperada: {e}"

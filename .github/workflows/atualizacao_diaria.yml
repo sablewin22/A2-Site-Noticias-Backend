@@ -52,7 +52,7 @@ jobs:
           ls -lh noticias.db embeddings.npz
 
       - name: 1. Coletar notícias novas
-        run: python coletor_noticias.py --atualizar
+        run: python coletor_noticias.py --atualizar --days 7
 
       - name: 2. Agrupar acontecimentos
         run: python agrupar_noticias.py

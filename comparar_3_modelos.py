@@ -2,7 +2,8 @@
 """
 Comparação Cruzada Completa: Gemini Flash Lite vs Groq Qwen vs Llama 3.2 vs Gabarito da Equipe Humana
 Calcula porcentagens de acerto, Cohen's Kappa e matrizes de concordância inter-modelos e inter-humanos.
-Gabarito humano construído por MAIORIA ESTRITA (mínimo 2 votos; empates triplos 1-1-1 são desconsiderados por ambiguidade).
+Gabarito humano construído por MAIORIA ESTRITA entre os 4 integrantes (Jamilly, Sabrina, Júlia e João).
+Empates no topo (como 2-2 ou 1-1-1-1) são desconsiderados por ambiguidade genuína sem consenso.
 Uso: python comparar_3_modelos.py
 """
 
@@ -21,11 +22,12 @@ def carregar_dados():
     con = sqlite3.connect("noticias.db")
     con.row_factory = sqlite3.Row
     
-    # 1. Carregar validações das 3 integrantes humanas
+    # 1. Carregar validações dos 4 integrantes humanos
     arquivos_humanos = {
         "jamilly": "validacao_jamilly.csv",
         "sabrina": "validacao_sabrina.csv",
-        "julia": "validacao_julia.csv"
+        "julia": "validacao_julia.csv",
+        "joao": "validacao_joao.csv"
     }
     
     votos_humanos = {}
@@ -33,7 +35,10 @@ def carregar_dados():
         if not os.path.exists(arq):
             raise SystemExit(f"Arquivo {arq} não encontrado.")
         with open(arq, encoding="utf-8-sig") as f:
-            linhas = list(csv.DictReader(f, delimiter=";"))
+            amostra = f.read(2048)
+            f.seek(0)
+            delimitador = ";" if ";" in amostra else ","
+            linhas = list(csv.DictReader(f, delimiter=delimitador))
             for l in linhas:
                 nid = int(l["noticia_id"])
                 if nid not in votos_humanos:
@@ -41,28 +46,32 @@ def carregar_dados():
                         "noticia_id": nid,
                         "portal": l.get("portal", ""),
                         "titulo": l.get("titulo", ""),
-                        "avaliadoras": {}
+                        "avaliadores": {}
                     }
-                votos_humanos[nid]["avaliadoras"][nome] = {
+                votos_humanos[nid]["avaliadores"][nome] = {
                     dim: (l.get(f"humano_{dim}") or "").strip().lower().replace(" ", "_")
                     for dim in DIMENSOES
                 }
 
-    # 2. Construir Gabarito por MAIORIA ESTRITA (sem privilégio ou voto de desempate)
-    # Exige no mínimo 2 votos concordantes. Divisão 1-1-1 vira None (sem consenso).
+    # 2. Construir Gabarito por MAIORIA ESTRITA entre os 4 integrantes
+    # Exige pluralidade clara sem empate no topo. Empates (ex: 2 a 2 ou 1-1-1-1) viram None.
     gabarito_maioria = {}
     casos_sem_consenso = []
     
     for nid, d in votos_humanos.items():
         gabarito_maioria[nid] = {}
         for dim in DIMENSOES:
-            votos = [d["avaliadoras"][nome].get(dim) for nome in arquivos_humanos if d["avaliadoras"][nome].get(dim)]
+            votos = [d["avaliadores"][nome].get(dim) for nome in arquivos_humanos if d["avaliadores"][nome].get(dim)]
             if not votos:
                 gabarito_maioria[nid][dim] = None
             else:
                 contagem = Counter(votos)
                 mais_comum, qtd = contagem.most_common(1)[0]
-                if qtd >= 2:
+                # Se houver empate no topo (ex: 2 a 2), desconsidera por ambiguidade
+                if len(contagem) > 1 and contagem.most_common(2)[1][1] == qtd:
+                    gabarito_maioria[nid][dim] = None
+                    casos_sem_consenso.append((nid, dim, votos))
+                elif qtd >= 2:
                     gabarito_maioria[nid][dim] = mais_comum
                 else:
                     gabarito_maioria[nid][dim] = None
@@ -115,17 +124,18 @@ def main():
     
     dimensoes = ["tipo", "tom_manchete", "profundidade", "postura", "vies_politico", "tema"]
     
-    print("=" * 115)
-    print("RELATÓRIO METODOLÓGICO: BENCHMARK DOS MODELOS DE IA FRENTE AO GABARITO HUMANO DA EQUIPE")
-    print("=" * 115)
-    print(f"Total de notícias analisadas: {len(ids)} | Ambiguidade tripla (1-1-1 desconsiderada): {len(sem_consenso)} casos\n")
+    print("=" * 125)
+    print("RELATÓRIO METODOLÓGICO: BENCHMARK DOS MODELOS DE IA FRENTE AO GABARITO HUMANO DA EQUIPE COMPLETA")
+    print("=" * 125)
+    print(f"Total de notícias analisadas: {len(ids)} | Avaliadores: Jamilly, Sabrina, Júlia e João")
+    print(f"Ambiguidade sem consenso estrito (desconsiderada): {len(sem_consenso)} casos\n")
     
     # ------------------------------------------------------------- TABELA 1: GABARITO MAIORIA
-    print("=" * 115)
-    print("TABELA 1: ACERTO DOS MODELOS EM RELAÇÃO AO GABARITO DA MAIORIA HUMANA (MESMO PESO PARA TODAS)")
-    print("=" * 115)
-    print(f"{'Dimensão':<20} | {'Gemini vs Maioria':<24} | {'Groq vs Maioria':<24} | {'Llama 3.2 vs Maioria':<24} | {'Consenso Humano':<16}")
-    print("-" * 115)
+    print("=" * 125)
+    print("TABELA 1: ACERTO DOS MODELOS EM RELAÇÃO AO GABARITO DE MAIORIA HUMANA (4 INTEGRANTES)")
+    print("=" * 125)
+    print(f"{'Dimensão':<20} | {'Gemini vs Maioria':<26} | {'Groq vs Maioria':<26} | {'Llama 3.2 vs Maioria':<26} | {'Consenso Humano':<16}")
+    print("-" * 125)
     
     totais = {"gemini": [], "groq": [], "llama": []}
     for dim in dimensoes:
@@ -143,22 +153,22 @@ def main():
         
         nome_dim = DIMENSOES[dim]["nome"]
         total_esperado = 30 if dim in ["tema", "tom_manchete"] else 26
-        print(f"{nome_dim:<20} | {pct_gem:>5.1f}% (k={k_gem:>.3f})           | {pct_grq:>5.1f}% (k={k_grq:>.3f})           | {pct_lla:>5.1f}% (k={k_lla:>.3f})           | {n_gem}/{total_esperado} com maioria")
+        print(f"{nome_dim:<20} | {pct_gem:>5.1f}% (k={k_gem:>.3f})             | {pct_grq:>5.1f}% (k={k_grq:>.3f})             | {pct_lla:>5.1f}% (k={k_lla:>.3f})             | {n_gem}/{total_esperado} com consenso")
         
-    print("-" * 115)
+    print("-" * 125)
     m_gem = (sum(totais["gemini"]) / len(totais["gemini"]) * 100) if totais["gemini"] else 0
     m_grq = (sum(totais["groq"]) / len(totais["groq"]) * 100) if totais["groq"] else 0
     m_lla = (sum(totais["llama"]) / len(totais["llama"]) * 100) if totais["llama"] else 0
-    print(f"{'MÉDIA GERAL (ACERTO)':<20} | {m_gem:>5.1f}%                    | {m_grq:>5.1f}%                    | {m_lla:>5.1f}%                    | {len(totais['gemini'])} pares avaliados")
-    print("=" * 115)
+    print(f"{'MÉDIA GERAL (ACERTO)':<20} | {m_gem:>5.1f}%                      | {m_grq:>5.1f}%                      | {m_lla:>5.1f}%                      | {len(totais['gemini'])} pares avaliados")
+    print("=" * 125)
     print()
 
     # ------------------------------------------------------------- TABELA 2: INTER-MODELOS
-    print("=" * 115)
+    print("=" * 125)
     print("TABELA 2: CONCORDÂNCIA DIRETA ENTRE OS MODELOS DE INTELIGÊNCIA ARTIFICIAL")
-    print("=" * 115)
-    print(f"{'Dimensão':<20} | {'Gemini vs Groq':<24} | {'Gemini vs Llama 3.2':<24} | {'Groq vs Llama 3.2':<24}")
-    print("-" * 115)
+    print("=" * 125)
+    print(f"{'Dimensão':<20} | {'Gemini vs Groq':<26} | {'Gemini vs Llama 3.2':<26} | {'Groq vs Llama 3.2':<26}")
+    print("-" * 125)
     
     tot_inter = {"gem_groq": [], "gem_lla": [], "groq_lla": []}
     for dim in dimensoes:
@@ -175,35 +185,62 @@ def main():
         tot_inter["groq_lla"].extend([a == b for a, b in p_ql if a and b and a != "nan" and b != "nan"])
         
         nome_dim = DIMENSOES[dim]["nome"]
-        print(f"{nome_dim:<20} | {pct_gg:>5.1f}% (k={k_gg:>.3f})           | {pct_gl:>5.1f}% (k={k_gl:>.3f})           | {pct_ql:>5.1f}% (k={k_ql:>.3f})")
+        print(f"{nome_dim:<20} | {pct_gg:>5.1f}% (k={k_gg:>.3f})             | {pct_gl:>5.1f}% (k={k_gl:>.3f})             | {pct_ql:>5.1f}% (k={k_ql:>.3f})")
         
-    print("-" * 115)
+    print("-" * 125)
     m_gg = (sum(tot_inter["gem_groq"]) / len(tot_inter["gem_groq"]) * 100) if tot_inter["gem_groq"] else 0
     m_gl = (sum(tot_inter["gem_lla"]) / len(tot_inter["gem_lla"]) * 100) if tot_inter["gem_lla"] else 0
     m_ql = (sum(tot_inter["groq_lla"]) / len(tot_inter["groq_lla"]) * 100) if tot_inter["groq_lla"] else 0
-    print(f"{'MÉDIA INTER-MODELOS':<20} | {m_gg:>5.1f}%                    | {m_gl:>5.1f}%                    | {m_ql:>5.1f}%")
-    print("=" * 115)
+    print(f"{'MÉDIA INTER-MODELOS':<20} | {m_gg:>5.1f}%                      | {m_gl:>5.1f}%                      | {m_ql:>5.1f}%")
+    print("=" * 125)
     print()
 
-    # ------------------------------------------------------------- TABELA 3: INTER-HUMANOS
-    print("=" * 115)
-    print("TABELA 3: CONCORDÂNCIA INTERANOTADORES ENTRE AS AVALIADORAS HUMANAS")
-    print("=" * 115)
-    print(f"{'Dimensão':<20} | {'Jamilly vs Sabrina':<24} | {'Jamilly vs Júlia':<24} | {'Sabrina vs Júlia':<24}")
-    print("-" * 115)
+    # ------------------------------------------------------------- TABELA 3: INTER-HUMANOS (4 INTEGRANTES - 6 PARES)
+    print("=" * 125)
+    print("TABELA 3: MATRIZ DE CONCORDÂNCIA INTERANOTADORES ENTRE OS 4 INTEGRANTES HUMANOS (KAPPA DE COHEN)")
+    print("=" * 125)
+    pares_nomes = [
+        ("jamilly", "sabrina", "Jam vs Sab"),
+        ("jamilly", "julia", "Jam vs Jul"),
+        ("jamilly", "joao", "Jam vs João"),
+        ("sabrina", "julia", "Sab vs Jul"),
+        ("sabrina", "joao", "Sab vs João"),
+        ("julia", "joao", "Jul vs João")
+    ]
+    
+    cabecalho = f"{'Dimensão':<18} | " + " | ".join(f"{rotulo:<15}" for _, _, rotulo in pares_nomes) + f" | {'Média Geral':<12}"
+    print(cabecalho)
+    print("-" * 125)
+    
+    medias_dim = []
+    totais_pares = {p[2]: [] for p in pares_nomes}
     
     for dim in dimensoes:
-        p_js = [(votos_humanos[i]["avaliadoras"]["jamilly"].get(dim), votos_humanos[i]["avaliadoras"]["sabrina"].get(dim)) for i in ids]
-        p_ju = [(votos_humanos[i]["avaliadoras"]["jamilly"].get(dim), votos_humanos[i]["avaliadoras"]["julia"].get(dim)) for i in ids]
-        p_su = [(votos_humanos[i]["avaliadoras"]["sabrina"].get(dim), votos_humanos[i]["avaliadoras"]["julia"].get(dim)) for i in ids]
+        linha_str = f"{DIMENSOES[dim]['nome']:<18} | "
+        kappas_dim = []
+        for u1, u2, rotulo in pares_nomes:
+            p = [(votos_humanos[i]["avaliadores"][u1].get(dim), votos_humanos[i]["avaliadores"][u2].get(dim)) for i in ids]
+            pct, k, _ = calcular_metricas(p)
+            linha_str += f"{pct:>4.0f}% (k={k:>.2f})  | "
+            kappas_dim.append(k)
+            totais_pares[rotulo].extend([a == b for a, b in p if a and b and a != "nan" and b != "nan"])
+        media_k = sum(kappas_dim) / len(kappas_dim) if kappas_dim else 0
+        medias_dim.append(media_k)
+        linha_str += f"k={media_k:>.3f}"
+        print(linha_str)
         
-        pct_js, k_js, _ = calcular_metricas(p_js)
-        pct_ju, k_ju, _ = calcular_metricas(p_ju)
-        pct_su, k_su, _ = calcular_metricas(p_su)
-        
-        nome_dim = DIMENSOES[dim]["nome"]
-        print(f"{nome_dim:<20} | {pct_js:>5.1f}% (k={k_js:>.3f})           | {pct_ju:>5.1f}% (k={k_ju:>.3f})           | {pct_su:>5.1f}% (k={k_su:>.3f})")
-    print("=" * 115)
+    print("-" * 125)
+    linha_rodape = f"{'MÉDIA POR PAR':<18} | "
+    todas_medias = []
+    for _, _, rotulo in pares_nomes:
+        val = totais_pares[rotulo]
+        m = (sum(val) / len(val) * 100) if val else 0
+        linha_rodape += f"{m:>5.1f}%          | "
+        todas_medias.append(m)
+    m_humana_total = sum(todas_medias) / len(todas_medias) if todas_medias else 0
+    linha_rodape += f"{m_humana_total:>5.1f}%"
+    print(linha_rodape)
+    print("=" * 125)
 
 if __name__ == "__main__":
     main()

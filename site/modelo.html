@@ -42,16 +42,6 @@ html.js [data-r="left"]{transform:translateX(-60px)}
 header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--bg);border-bottom:1px solid var(--line);transition:background-color .7s,border-color .7s}
 header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:12px}
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-/* Logo do topo: ao clicar, a palavra amassa e solta */
-.logo .ew{position:relative;display:inline-block}
-.logo .ew::before,.logo .ew::after{content:none}
-.logo .ew::before{top:0;--y:5px}.logo .ew::after{bottom:0;--y:-5px}
-.logo .ew b{display:inline-block;transform-origin:50% 55%}
-.logo.amassa .ew::before,.logo.amassa .ew::after{animation:ew-linha .9s cubic-bezier(.5,0,.3,1) both}
-.logo.amassa .ew b{animation:ew-palavra .9s cubic-bezier(.5,0,.3,1) both}
-@keyframes ew-linha{0%{transform:none}35%{transform:translateY(var(--y)) scaleX(1.06)}60%{transform:translateY(calc(var(--y) * -.5))}80%,100%{transform:none}}
-@keyframes ew-palavra{0%{transform:none}35%{transform:scale(1.08,.62)}60%{transform:scale(.97,1.12)}80%{transform:scale(1.01,.97)}100%{transform:none}}
-@media (prefers-reduced-motion:reduce){.logo.amassa .ew::before,.logo.amassa .ew::after,.logo.amassa .ew b{animation:none}}
 .logo b{font-family:var(--fd);font-weight:var(--fw);text-transform:var(--case);letter-spacing:var(--track);font-size:calc(1.45rem * min(1, var(--fs) * 1.25))}
 .dots3{position:relative;width:30px;height:18px;flex:none}
 .dots3 i{position:absolute;top:0;width:18px;height:18px;border-radius:50%}
@@ -342,6 +332,11 @@ header.top .tabs{margin-left:auto}
 .demo{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:40px;align-items:center}
 .demo h2{font-size:calc(clamp(2.8rem,7vw,6rem) * var(--fs))}
 .demo p{color:var(--muted);max-width:40ch}
+#dseg{flex-wrap:wrap;overflow:visible;-webkit-mask-image:none;mask-image:none;border-radius:22px;justify-content:flex-start}
+#dseg button{padding:9px 14px}
+@media (max-width:520px){#dseg{justify-content:center}#dseg button{padding:8px 12px}}
+.demo-nota{margin:14px 0 0;font-size:.9rem;max-width:none!important}
+.demo-nota a{color:var(--fg)}
 .bars{display:grid;gap:12px;margin-top:16px}
 .bar{display:grid;grid-template-columns:130px minmax(0,1fr) 40px;gap:14px;align-items:center}
 .bar .track{height:56px;border-radius:14px;background:var(--surface);overflow:hidden;transition:background-color .7s}
@@ -433,6 +428,7 @@ header.top .tabs{margin-left:auto}
 .ohead h3{margin:0;font-size:1.15rem;font-weight:700;display:flex;align-items:center;gap:8px}
 .ocount{font-size:.75rem;font-weight:700;border-radius:999px;padding:2px 8px;background:var(--bg);color:var(--muted)}
 .oempty{margin:0;font-weight:600;font-size:.98rem}
+.omais{justify-self:start;margin-top:4px}
 .ohead p{margin:0;font-size:.92rem;color:var(--muted);max-width:70ch}
 .olist{list-style:none;margin:0;padding:0;display:grid}
 .orow{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;align-items:center;text-decoration:none;padding:10px 0;border-top:1px solid var(--line)}
@@ -660,7 +656,7 @@ footer ul a:hover{color:var(--fg)}
 
 <header class="top">
   <div class="wrap">
-    <a class="logo" href="#inicio" aria-label="Entrelinhas, início"><span class="dots3"><i></i><i></i><i></i></span><span class="ew"><b>Entrelinhas</b></span></a>
+    <a class="logo" href="#inicio" aria-label="Entrelinhas, início"><span class="dots3"><i></i><i></i><i></i></span><b>Entrelinhas</b></a>
     <nav class="tabs" aria-label="Seções">
       <a href="#inicio" data-tab="inicio">Início</a>
       <a href="#painel" data-tab="painel">Painel</a>
@@ -701,14 +697,12 @@ footer ul a:hover{color:var(--fg)}
     <div><h4>Equipe</h4><ul>
       <li>Jamilly Medeiros</li><li>João Vianna</li><li>Julia Cereja</li><li>Sabrina Azulay Lewin</li></ul></div>
   </div>
-  <p style="margin:18px 0 0;font-size:.8rem;opacity:.55"><a href="#diagnostico" style="color:inherit">Diagnóstico do navegador</a></p>
   <div class="foot-mark" aria-hidden="true">Entrelinhas</div>
 </div></footer>
 
 
 <script type="application/json" id="fotos-idx">__FOTOS_IDX__</script>
 <script type="application/json" id="dados-reais">__DADOS__</script>
-<script>window.__erros=[];addEventListener("error",function(e){window.__erros.push(String(e.message||e))});</script>
 <script>
 document.documentElement.classList.add("js");
 const $=(s,el=document)=>el.querySelector(s);
@@ -1073,8 +1067,9 @@ async function viewInicio(){
   ${CLASSIFICADO?`<section class="s" data-tone="light" style="padding-bottom:clamp(48px,6vw,80px)"><div class="wrap demo">
     <div data-r="left"><h2 class="D">Você escolhe a régua</h2><p>As mesmas notícias, reorganizadas pelo critério que você escolher.</p></div>
     <div data-r="scale">
-      <div class="seg" id="dseg" role="group" aria-label="Critério">${CRITERIOS.map(c=>`<button type="button" id="d-${c.id}" data-demo="${c.id}" aria-pressed="${c.id===critDemo}">${esc(c.nome)}</button>`).join("")}</div>
+      <div class="seg" id="dseg" role="group" aria-label="Critério">${CRITERIOS.map(c=>`<button type="button" id="d-${c.id}" data-demo="${c.id}" aria-pressed="${c.id===critDemo}" title="${esc(c.nome)}">${esc(NOME_CURTO[c.id]||c.nome)}</button>`).join("")}</div>
       <div class="bars" id="bars"></div>
+      <p class="demo-nota" id="demo-nota"></p>
     </div>
   </div></section>`:""}
 
@@ -1127,10 +1122,24 @@ function lentes(){
   // na primeira vez que a página inicial aparece, roda sozinha
   if(!lentesVistas){lentesVistas=true;setTimeout(toca,500)}
 }
+const NOME_CURTO={tipo:"Tipo",tom:"Tom",prof:"Profundidade",postura:"Postura",vies:"Viés"};
+/* A demonstração usa sempre o mesmo grupo de notícias: as do acontecimento com mais notícias
+   classificadas em TODOS os critérios. Assim o total nunca muda; trocar o critério só redistribui. */
+let DEMO=null;
+function demoNoticias(){
+  if(DEMO) return DEMO;
+  const ok=n=>CRITERIOS.every(c=>Classificador.resultado(n,c.id).opcao!==null);
+  let melhor=null;
+  MOCK.subtemas.forEach(s=>{const ns=(MOCK.noticias[s.id]||[]).filter(ok);if(!melhor||ns.length>melhor.ns.length)melhor={s,ns}});
+  return DEMO=melhor;
+}
 async function renderDemo(){
-  const sub=await Dados.subtema(MOCK.noticias["copom-selic"]?"copom-selic":(await Dados.subtemas())[0].id), C=CRITERIOS.find(c=>c.id===critDemo), d=[0,0,0];
-  sub.noticias.forEach(n=>{const o=Classificador.resultado(n,critDemo).opcao;if(o!==null)d[o]++}); // demonstração: todas as notícias entram, então o total é sempre o mesmo
-  const max=Math.max(...d,1), box=$("#bars");
+  const C=CRITERIOS.find(c=>c.id===critDemo), d=[0,0,0], dm=demoNoticias(), box=$("#bars");
+  if(!dm||!dm.ns.length) return;
+  dm.ns.forEach(n=>d[Classificador.resultado(n,critDemo).opcao]++);
+  const max=dm.ns.length; // barras na escala do total: as mesmas notícias, só redistribuídas
+  const nota=$("#demo-nota");
+  if(nota&&!nota.textContent)nota.innerHTML=`As mesmas ${dm.ns.length} notícias de <a href="#sub-${dm.s.id}">${esc(dm.s.titulo)}</a>.`;
   if(!box.children.length){box.innerHTML=d.map((v,i)=>`<div class="bar"><span class="bl">${esc(C.opcoes[i])}</span><div class="track"><div class="f" style="width:0;background:${AV[i]}"></div></div><b data-v="0">0</b></div>`).join("");box.offsetWidth}
   [...box.children].forEach((row,i)=>{
     swapText(row.querySelector(".bl"),C.opcoes[i],1,i*60);
@@ -1184,7 +1193,7 @@ function afterInicio(){try{halftone()}catch(e){}try{lentes()}catch(e){}if(!$("#d
    ===================================================================== */
 async function viewTemas(){
   const temas=await Dados.temas(), subs=await Dados.subtemas();
-  const ordem=subs.slice().sort((a,b)=>a.data&&b.data?b.data.localeCompare(a.data):rec(a.atualizado)-rec(b.atualizado));
+  const ordem=subs.slice().sort((a,b)=>String(b.data||"").localeCompare(String(a.data||""))||rec(a.atualizado)-rec(b.atualizado));
   /* o mais recente de cada tema, para o carrossel não ficar todo em um tema só */
   const vistos=new Set(), recentes=ordem.filter(s=>!vistos.has(s.tema)&&vistos.add(s.tema)).slice(0,8);
   return `
@@ -1219,7 +1228,7 @@ function carousel(car){
   car.addEventListener("dragstart",e=>e.preventDefault());
   car.addEventListener("wheel",e=>{if(Math.abs(e.deltaX)>Math.abs(e.deltaY)){off-=e.deltaX;e.preventDefault()}},{passive:false});
 }
-function rec(t){if(t.includes("min"))return parseInt(t.replace(/\D/g,""));if(t.includes("h"))return parseInt(t.replace(/\D/g,""))*60;return 99999}
+function rec(t){t=String(t||"");if(t.includes("min"))return parseInt(t.replace(/\D/g,""));if(t.includes("h"))return parseInt(t.replace(/\D/g,""))*60;return 99999}
 function afterTemas(){
   try{halftone($("#fx-head"))}catch(e){}
   const idx=$("#index"), peek=$("#peek"), tag=$("#peek-tag"); if(!idx)return;
@@ -1474,27 +1483,49 @@ const PADRAO_MIN=50, MIN_NOT_PADRAO=3;
 /* Índice da opção que é o padrão, ou -1. Exige 50% ou mais e uma única opção na frente:
    empate (por exemplo, 2 notícias, cada uma numa coluna) não define padrão. */
 function padraoDe(dist){const q=pctOf(dist),m=Math.max(...q),n=dist.reduce((a,b)=>a+b,0);if(n<MIN_NOT_PADRAO||m<PADRAO_MIN||q.filter(v=>v===m).length>1||!dist.some(Boolean))return -1;return q.indexOf(m)}
-function renderOutliers(p,C,_pct,D){
-  const nAcont={}; MOCK.subtemas.filter(s=>s.portais>=CONFIG.minPortais).forEach(s=>nAcont[s.tema]=(nAcont[s.tema]||0)+1);
-  const ok=()=>true;
-  const box=$("#outliers"), recTxt=temaP==="todos"?"":" · "+esc(temaNome(temaP));
-  const shell=(body)=>`<div class="obox"><div class="ohead"><span class="mono">Dentro de ${esc(p.nome)}${recTxt}</span>${body}</div>`;
-  const itens=D.itens.filter(x=>x.r.classificada&&ok(x.sub.tema));
-  if(!itens.length){box.innerHTML=shell(`<h3>Notícias fora do padrão</h3></div><p class="oempty">${esc(p.nome)} não publicou notícias classificadas neste recorte.</p></div>`);return}
-  if(itens.length<MIN_NOT_PADRAO){
-    box.innerHTML=shell(`<h3>Notícias fora do padrão</h3></div><p class="oempty">${esc(p.nome)} tem só ${itens.length} ${itens.length===1?"notícia classificada":"notícias classificadas"} ${temaP==="todos"?"neste critério":"em "+esc(temaNome(temaP))}. É pouco para definir um padrão.</p></div>`);return}
+function foraCalc(p,C,D){
+  const itens=D.itens.filter(x=>x.r.classificada);
+  if(!itens.length) return {estado:"vazio",itens};
+  if(itens.length<MIN_NOT_PADRAO) return {estado:"pouco",itens};
   const dist=[0,0,0]; itens.forEach(x=>dist[x.r.opcao]++);
   const pct=pctOf(dist), dom=padraoDe(dist);
-  if(dom<0){
-    box.innerHTML=shell(`<h3>Notícias fora do padrão</h3></div><p class="oempty">Neste recorte, nenhuma opção fica sozinha com metade ou mais das notícias de ${esc(p.nome)}, então não há um padrão definido.</p></div>`);return}
+  if(dom<0) return {estado:"sem",itens,pct};
   const fora=itens.filter(x=>x.r.opcao!==dom).sort((a,b)=>pct[a.r.opcao]-pct[b.r.opcao]||b.r.confianca-a.r.confianca);
-  const nota="";
-  box.innerHTML=shell(`<h3>Notícias fora do padrão${fora.length?` <span class="ocount">${fora.length}</span>`:""}</h3>
-      <p>O padrão de ${esc(p.nome)} aqui é "${esc(C.opcoes[dom]).toLowerCase()}", com ${pct[dom]}% das ${itens.length} notícias. As que caíram em outra opção ficam fora do padrão.${nota}</p></div>
-    ${fora.length?`<ul class="olist">${fora.map(({n,r,sub})=>`<li><a class="orow" href="#sub-${sub.id}">${ph("Imagem","sm")}
+  return {estado:"ok",itens,pct,dom,fora};
+}
+const listaFora=(fora,C,pct)=>`<ul class="olist">${fora.map(({n,r,sub})=>`<li><a class="orow" href="#sub-${sub.id}">${ph("Imagem","sm")}
       <div class="otxt"><b>${esc(n.titulo)}</b><span class="mono">${esc(sub.titulo)} · ${n.hora}</span></div>
-      <span class="otag"><i style="background:${AV[r.opcao]}"></i>${esc(C.opcoes[r.opcao])} · ${pct[r.opcao]}%</span></a></li>`).join("")}</ul>`
+      <span class="otag"><i style="background:${AV[r.opcao]}"></i>${esc(C.opcoes[r.opcao])} · ${pct[r.opcao]}%</span></a></li>`).join("")}</ul>`;
+const FORA_RESUMO=2;
+function renderOutliers(p,C,_pct,D){
+  const box=$("#outliers"), recTxt=temaP==="todos"?"":" · "+esc(temaNome(temaP));
+  const shell=(body)=>`<div class="obox"><div class="ohead"><span class="mono">Dentro de ${esc(p.nome)}${recTxt}</span>${body}</div>`;
+  const F=foraCalc(p,C,D);
+  if(F.estado==="vazio"){box.innerHTML=shell(`<h3>Notícias fora do padrão</h3></div><p class="oempty">${esc(p.nome)} não publicou notícias classificadas neste recorte.</p></div>`);return}
+  if(F.estado==="pouco"){
+    box.innerHTML=shell(`<h3>Notícias fora do padrão</h3></div><p class="oempty">${esc(p.nome)} tem só ${F.itens.length} ${F.itens.length===1?"notícia classificada":"notícias classificadas"} ${temaP==="todos"?"neste critério":"em "+esc(temaNome(temaP))}. É pouco para definir um padrão.</p></div>`);return}
+  if(F.estado==="sem"){
+    box.innerHTML=shell(`<h3>Notícias fora do padrão</h3></div><p class="oempty">Neste recorte, nenhuma opção fica sozinha com metade ou mais das notícias de ${esc(p.nome)}, então não há um padrão definido.</p></div>`);return}
+  const {fora,pct,dom,itens}=F;
+  box.innerHTML=shell(`<h3>Notícias fora do padrão${fora.length?` <span class="ocount">${fora.length}</span>`:""}</h3>
+      <p>O padrão de ${esc(p.nome)} aqui é "${esc(C.opcoes[dom]).toLowerCase()}", com ${pct[dom]}% das ${itens.length} notícias. As que caíram em outra opção ficam fora do padrão.</p></div>
+    ${fora.length?listaFora(fora.slice(0,FORA_RESUMO),C,pct)+(fora.length>FORA_RESUMO?`<a class="cta ghost omais" href="#fora">Ver todas as ${fora.length} notícias fora do padrão <i aria-hidden="true">→</i></a>`:"")
     :`<p class="oempty">Todas as notícias seguem o padrão.</p>`}</div>`);
+}
+/* Página com todas as notícias fora do padrão do portal, critério e tema escolhidos em Portais */
+async function viewFora(){
+  const p=MOCK.portais.find(x=>x.id===portalSel), C=CRITERIOS.find(c=>c.id===critP);
+  const D=await Dados.painel(portalSel,critP,temaP), F=foraCalc(p,C,D);
+  const rec=`${esc(p.nome)} · ${esc(C.nome)} · ${temaP==="todos"?"todos os temas":esc(temaNome(temaP))}`;
+  const corpo=F.estado!=="ok"?`<p class="oempty">Não há um padrão definido neste recorte.</p>`
+    :F.fora.length?`<p style="color:var(--muted);margin:0 0 18px;max-width:70ch">O padrão de ${esc(p.nome)} aqui é "${esc(C.opcoes[F.dom]).toLowerCase()}", com ${F.pct[F.dom]}% das ${F.itens.length} notícias. Estas ${F.fora.length} caíram em outra opção.</p><div class="obox">${listaFora(F.fora,C,F.pct)}</div>`
+    :`<p class="oempty">Todas as notícias seguem o padrão.</p>`;
+  return `
+  <section class="ph-head fxbg" id="fora-head" data-tone="light"><canvas class="halftone" aria-hidden="true"></canvas><div class="wrap">
+    <h1 class="D" data-r>Fora do padrão</h1><p class="mono" style="margin:8px 0 0;color:var(--muted)">${rec}</p>
+    <a class="cta ghost" href="#portais" style="position:relative;z-index:2;margin-top:18px">← Voltar para Portais</a>
+  </div></section>
+  <section class="s" data-tone="light" style="padding-top:0"><div class="wrap">${corpo}</div></section>`;
 }
 function selectPortal(id){
   if(id===portalSel)return; portalSel=id;
@@ -1799,34 +1830,6 @@ function afterPainel(){
   $("#perseg").addEventListener("click",e=>{const b=e.target.closest("[data-per]");if(!b)return;perP=b.dataset.per;document.querySelectorAll("[data-per]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.per===perP));renderPainel()});
   $("#pn-body").addEventListener("click",e=>{const b=e.target.closest("[data-pnc]");if(!b||b.dataset.pnc===critPn)return;trocaCriterio(b.dataset.pnc)});
 }
-/* Diagnóstico (endereço #diagnostico, fora do menu): mostra o que o navegador suporta,
-   para descobrir por que as animações não aparecem num computador. */
-function viewDiag(){
-  const mm=q=>{try{return matchMedia(q).matches}catch(e){return "?"}};
-  const sup=(p,v)=>{try{return CSS.supports(p,v)}catch(e){return false}};
-  const linhas=[
-    ["Navegador",navigator.userAgent],
-    ["Reduzir movimento (sistema)",mm("(prefers-reduced-motion: reduce)")?"LIGADO: o site desliga as animações":"desligado"],
-    ["Animações rodando agora",document.getAnimations?document.getAnimations().length:"não suportado"],
-    ["Animações CSS",sup("animation-name","x")?"ok":"NÃO"],
-    ["IntersectionObserver (seções que aparecem ao rolar)","IntersectionObserver" in window?"ok":"NÃO"],
-    ["Unidades cqw (bolinhas da capa)",sup("width","1cqw")?"ok":"NÃO"],
-    ["color-mix (cores do painel)",sup("color","color-mix(in srgb, red 50%, blue)")?"ok":"NÃO"],
-    ["Erros de script",(window.__erros||[]).length?window.__erros.join(" | "):"nenhum"],
-    ["Tela",innerWidth+"×"+innerHeight+" · densidade "+devicePixelRatio],
-  ];
-  return `<section class="s" data-tone="light"><div class="wrap" style="max-width:860px">
-    <h1 class="D" style="font-size:clamp(2.2rem,5vw,3.6rem)">Diagnóstico</h1>
-    <p style="color:var(--muted)">Tire um print desta tela e mande para quem cuida do site.</p>
-    <table style="width:100%;border-collapse:collapse;margin-top:20px;font-size:.95rem">${linhas.map(([k,v])=>`<tr><th style="text-align:left;padding:10px 12px 10px 0;border-top:1px solid var(--line);vertical-align:top;width:40%">${esc(k)}</th><td style="padding:10px 0;border-top:1px solid var(--line);word-break:break-word">${esc(String(v))}</td></tr>`).join("")}</table>
-    <p style="margin-top:24px"><button class="cta" id="diag-anim" type="button">Testar uma animação</button> <span id="diag-bola" style="display:inline-block;width:28px;height:28px;border-radius:50%;background:var(--a2);vertical-align:middle;margin-left:12px"></span> <span id="diag-res" style="color:var(--muted);margin-left:8px"></span></p>
-  </div></section>`;
-}
-function afterDiag(){
-  $("#diag-anim").addEventListener("click",()=>{const b=$("#diag-bola");
-    try{const a=b.animate([{transform:"translateX(0)"},{transform:"translateX(160px)"},{transform:"translateX(0)"}],{duration:1200});
-      a.onfinish=()=>{$("#diag-res").textContent="a bolinha andou? então animações funcionam neste navegador"}}catch(e){$("#diag-res").textContent="erro: "+e.message}});
-}
 async function route(){
   const h=(location.hash||"#inicio").slice(1);
   let html, after=()=>{}, tab="inicio";
@@ -1834,7 +1837,7 @@ async function route(){
   else if(h.startsWith("tema-")){html=await viewTema(h.slice(5));after=()=>{try{halftone($("#fx-head"))}catch(e){}};tab="temas"}
   else if(h.startsWith("sub-")){html=await viewSub(h.slice(4));after=afterSub;tab="temas"}
   else if(h==="portais"){html=await viewPortais();after=afterPortais;tab="portais"}
-  else if(h==="diagnostico"){html=viewDiag();after=afterDiag}
+  else if(h==="fora"){html=await viewFora();after=()=>{try{halftone($("#fora-head"))}catch(e){}};tab="portais"}
   else if(h==="painel"){html=viewPainel();after=afterPainel;tab="painel"}
   else if(h==="metodologia"){html=viewMetodologia();after=afterMetodologia;tab="metodologia"}
   else if(h==="sobre"){html=viewSobre();after=()=>{try{halftone($("#fx-head"))}catch(e){}};tab="sobre"}
@@ -1903,11 +1906,6 @@ addEventListener("keydown",e=>{if(e.key==="Escape")closeSearch();if(e.key==="/"&
 $("#search-res").addEventListener("click",e=>{const a=e.target.closest("a");if(!a)return;
   if(a.dataset.goportal){portalSel=a.dataset.goportal;if(location.hash==="#portais"){e.preventDefault();route()}}
   closeSearch();
-});
-/* Logo do topo: cada clique amassa e solta a palavra entre as linhas */
-document.querySelectorAll("header .logo").forEach(l=>{
-  l.addEventListener("click",()=>{l.classList.remove("amassa");void l.offsetWidth;l.classList.add("amassa")});
-  l.addEventListener("animationend",e=>{if(e.animationName==="ew-palavra")l.classList.remove("amassa")});
 });
 addEventListener("hashchange",route);
 route();

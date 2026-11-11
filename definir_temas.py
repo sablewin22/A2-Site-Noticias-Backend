@@ -96,28 +96,34 @@ TERMOS = {
         "torcida", "estadio", "escalac", "onde assistir", "placar", "melhores momentos",
     ],
     "cultura": [
-        "cultura", "cultural", "cinema", "filme", "serie", "novela", "ator", "atriz", "cantor",
-        "cantora", "musica", "album", "show", "turne", "festival", "rock in rio", "lollapalooza",
-        "carnaval", "escola de samba", "rainha de bateria", "desfile", "museu", "exposicao",
-        "teatro", "peca", "livro", "escritor", "literatura", "premio jabuti", "oscar", "grammy",
-        "emmy", "bienal", "artista", "arte", "dança", "danca", "streaming", "netflix", "globoplay",
-        "reality", "bbb", "celebridade", "famos", "influenciador", "youtuber", "morre aos",
-        "morre o", "morre a", "estreia", "documentario", "patrimonio", "halloween",
+        "cultura", "cultural", "cinema", "filme", "serie",
+        "teatro", "peca", "livro", "escritor", "literatura", "premio jabuti", "oscar",
+        "emmy", "bienal", "artista", "arte", "dança", "danca", "documentario", "patrimonio",
+        "museu", "exposicao", "mostra", "orquestra", "musica classica", "mpb",
+        "festival de cinema", "artes visuais", "carnaval", "escola de samba",
         "internacional", "exterior", "mundo", "europa", "eua", "estados unidos", "espanha",
         "franca", "argentina", "asia", "oriente medio", "atentado", "bomba", "explosao",
         "acidente aereo", "acidente de trem", "ferroviari", "aeroporto", "diplomacia", "geopolitica",
     ],
     "cultura/mundo": [
-        "cultura", "cultural", "cinema", "filme", "serie", "novela", "ator", "atriz", "cantor",
-        "cantora", "musica", "album", "show", "turne", "festival", "rock in rio", "lollapalooza",
-        "carnaval", "escola de samba", "rainha de bateria", "desfile", "museu", "exposicao",
-        "teatro", "peca", "livro", "escritor", "literatura", "premio jabuti", "oscar", "grammy",
-        "emmy", "bienal", "artista", "arte", "dança", "danca", "streaming", "netflix", "globoplay",
-        "reality", "bbb", "celebridade", "famos", "influenciador", "youtuber", "morre aos",
-        "morre o", "morre a", "estreia", "documentario", "patrimonio", "halloween",
+        "cultura", "cultural", "cinema", "filme", "serie",
+        "teatro", "peca", "livro", "escritor", "literatura", "premio jabuti", "oscar",
+        "emmy", "bienal", "artista", "arte", "dança", "danca", "documentario", "patrimonio",
+        "museu", "exposicao", "mostra", "orquestra", "musica classica", "mpb",
+        "festival de cinema", "artes visuais", "carnaval", "escola de samba",
         "internacional", "exterior", "mundo", "europa", "eua", "estados unidos", "espanha",
         "franca", "argentina", "asia", "oriente medio", "atentado", "bomba", "explosao",
         "acidente aereo", "acidente de trem", "ferroviari", "aeroporto", "diplomacia", "geopolitica",
+    ],
+    "entretenimento": [
+        "entretenimento", "celebridade", "celebridades", "famoso", "famosos", "famosa",
+        "fofoca", "fofocas", "reality", "bbb", "big brother", "a fazenda",
+        "influenciador", "influenciadora", "youtuber", "tiktoker", "miss mundo", "miss universo",
+        "vida pessoal", "separacao", "namoro", "traicao", "casamento de famoso", "gravidez",
+        "tapete vermelho", "look", "virais", "meme", "novela", "novelas", "ator", "atriz",
+        "cantor", "cantora", "show", "turne", "lollapalooza", "rock in rio", "streaming",
+        "lito sousa", "fernanda fialho", "fiuk", "harry styles", "cristiano araujo", "rick", "renner",
+        "harvey weinstein", "polemica", "festa de famoso", "anitta", "musica", "album",
     ],
 }
 
@@ -143,7 +149,7 @@ def pontos(titulo: str, trecho: str = "") -> Counter:
     return c
 
 
-ORDEM = ["politica", "economia", "saude", "educacao", "meio_ambiente", "esporte", "cultura"]
+ORDEM = ["politica", "economia", "saude", "educacao", "meio_ambiente", "esporte", "cultura", "entretenimento"]
 
 
 def tema_do_grupo(noticias, tema_busca=None):

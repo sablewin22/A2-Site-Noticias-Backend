@@ -167,6 +167,11 @@ header.top .tabs{margin-left:auto}
 .split3 .l2{color:var(--a2);transform:translate(calc(var(--p) * .02em),calc(var(--p) * .08em))}
 .split3 .l3{color:var(--a3);transform:translate(calc(var(--p) * .16em),calc(var(--p) * -.02em))}
 .split3 .lm{position:relative}
+.hero .split3{font-size:min(9vw,8.4rem);white-space:nowrap}
+.hero-sub{margin:-.1em 0 0;font-size:min(5vw,4.6rem);line-height:.95;color:var(--fg)}
+.hero-main{gap:clamp(14px,2vw,28px)!important;min-width:0}
+.hero .split3,.hero .hero-sub{max-width:100%}
+@media (max-width:760px){.hero .split3{font-size:min(16.5vw,9rem)}.hero-sub{font-size:min(10.5vw,4rem)}}
 .hero-txt{display:grid;gap:14px}
 .kicker{margin:0;font-family:var(--fb);font-weight:800;font-size:clamp(1.05rem,1.6vw,1.3rem);line-height:1.2}
 .kicker .mark{padding:.06em .3em;border-radius:.2em}
@@ -174,6 +179,7 @@ header.top .tabs{margin-left:auto}
 .hero-foot p{margin:0;max-width:44ch;font-size:clamp(1.1rem,1.6vw,1.35rem);color:var(--muted)}
 .hero-foot p b{color:var(--fg)}
 /* ── Painel: o que está acontecendo, em números ── */
+.wrap.pn-wide{max-width:none;padding-left:clamp(16px,3vw,48px);padding-right:clamp(16px,3vw,48px)}
 .pn-top{display:flex;flex-wrap:wrap;gap:16px 32px;align-items:end;justify-content:space-between;margin-bottom:clamp(20px,3vw,32px)}
 .pn-top p{margin:0;max-width:52ch;color:var(--muted)}
 .pn-body{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:clamp(12px,1.4vw,18px);animation:pn-in .45s ease both}
@@ -239,7 +245,7 @@ header.top .tabs{margin-left:auto}
 @media (max-width:1000px){.pn-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.s5,.s7,.s6{grid-column:span 12}}
 @media (max-width:520px){.pn-kpi{padding:16px}.pn-kpi b{font-size:clamp(1.05rem,13cqi,1.45rem)}.pn-row,.pn-srow{grid-template-columns:84px minmax(0,1fr) auto}.pn-srow{grid-template-columns:84px minmax(0,1fr)}}
 /* ── Início: lentes e destaques ── */
-.hero-grid{display:grid!important;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);align-items:center;gap:clamp(24px,4vw,64px)!important}
+.hero-grid{display:grid!important;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);align-items:center;gap:clamp(32px,5vw,80px)!important}
 .hero-main{display:grid;gap:clamp(24px,4vw,44px)}
 .lens{margin:0;display:grid;justify-items:center;gap:18px}
 
@@ -302,6 +308,31 @@ header.top .tabs{margin-left:auto}
   .dc0{min-height:400px}.dc1,.dc2{min-height:240px}
   .dc3,.dc4,.dc5{display:grid;grid-template-columns:118px minmax(0,1fr);gap:14px;align-items:start}
   .dc3 .ph,.dc4 .ph,.dc5 .ph{aspect-ratio:1;border-radius:14px}
+}
+
+/* Destaques: ao passar o mouse, o card vira e mostra do que o acontecimento trata */
+.dest-flip{display:grid;text-decoration:none;color:inherit;min-width:0;perspective:1400px}
+.pos0{grid-column:1/8;grid-row:1/3}.pos1,.pos2{grid-column:8/13}.pos3,.pos4,.pos5{grid-column:span 4}
+@media (max-width:1100px){.pos0{grid-column:1/-1;grid-row:auto}.pos1,.pos2{grid-column:span 6}}
+@media (max-width:760px){.pos0,.pos1,.pos2,.pos3,.pos4,.pos5{grid-column:1/-1}}
+.flip-in{display:grid;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.2,.8,.2,1)}
+.flip-in>.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;grid-column:1!important;grid-row:1!important}
+.dest-back{transform:rotateY(180deg);border-radius:22px;background:var(--fb,var(--a1));color:var(--fo,var(--on1));padding:clamp(18px,2.4vw,32px);display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.pos3 .dest-back,.pos4 .dest-back,.pos5 .dest-back{border-radius:18px}
+.dest-back .chip{align-self:flex-start;border-radius:999px;padding:5px 12px;font-size:.78rem;font-weight:700;background:var(--bg);color:var(--fg)}
+.dest-back .rot{font-size:.8rem;font-weight:700;color:currentColor;opacity:.7;margin:0}
+.dest-back h4{margin:0;font-size:clamp(1.05rem,1.4vw,1.3rem);font-weight:800;line-height:1.2;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.dest-back p.res{margin:0;font-size:.95rem;line-height:1.5;color:currentColor;opacity:.9;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5;overflow:hidden}
+.pos0 .dest-back h4{font-family:var(--fd);font-size:clamp(1.6rem,2.6vw,2.4rem);line-height:1.05}
+.pos0 .dest-back p.res{font-size:1.05rem;-webkit-line-clamp:9}
+.dest-back .vai{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.88rem;font-weight:700}
+.dest-back .vai i{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--bg);color:var(--fg);font-style:normal}
+@media (hover:hover){.dest-flip:hover .flip-in,.dest-flip:focus-visible .flip-in{transform:rotateY(180deg)}}
+@media (hover:none){.dest-back{display:none}}
+@media (prefers-reduced-motion:reduce){
+  .flip-in{transition:none}
+  .dest-back{transform:none;opacity:0;transition:opacity .25s}
+  @media (hover:hover){.dest-flip:hover .flip-in,.dest-flip:focus-visible .flip-in{transform:none}.dest-flip:hover .dest-back,.dest-flip:focus-visible .dest-back{opacity:1}}
 }
 
 .grow-wrap{padding-block:0 clamp(72px,10vw,150px)}
@@ -373,6 +404,8 @@ header.top .tabs{margin-left:auto}
 .index .nm{font-size:calc(clamp(3.2rem,10vw,9.6rem) * var(--fs));transition:transform .4s cubic-bezier(.2,.9,.2,1),color .3s}
 .index a:hover .nm{transform:translateX(24px)}
 .index .ct{display:grid;justify-items:end;gap:4px;flex:none}
+/* a foto que segue o mouse passa por baixo dos nomes e números dos temas */
+.index .nm,.index .ct{position:relative;z-index:6}
 .index .ct b{font-family:var(--fd);font-weight:var(--fw);font-size:calc(2.4rem * var(--fs));line-height:1}
 .peek{visibility:hidden;position:absolute;left:0;top:0;width:260px;pointer-events:none;opacity:0;transform:translate(-50%,-50%) scale(.8) rotate(-4deg);transition:opacity .25s,transform .35s cubic-bezier(.2,.9,.2,1);z-index:5}
 .peek.on{visibility:visible;opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-4deg)}
@@ -430,6 +463,7 @@ header.top .tabs{margin-left:auto}
 .oempty{margin:0;font-weight:600;font-size:.98rem}
 .omais{justify-self:start;margin-top:4px}
 .ph-head h1.fora-h1{white-space:nowrap;font-size:clamp(2rem,11.5vw,9rem)}
+.ph-head h1.casos-h1{line-height:.95}
 .fora-rec{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 0}
 .fora-rec div{display:grid;gap:2px;padding:10px 18px;border-radius:16px;background:var(--surface)}
 .fora-rec dt{font-size:.8rem;font-weight:600;color:var(--muted)}
@@ -664,15 +698,90 @@ footer ul a:hover{color:var(--fg)}
 .div-chart-head{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:14px}
 .div-chart-svg-wrap{position:relative;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px}
 .div-chart-svg{width:100%;min-width:640px;height:auto;display:block}
-.div-dot{cursor:pointer;transition:transform .2s,r .2s}
-.div-dot:hover{transform:scale(1.4);stroke:var(--fg)}
+.div-dot{pointer-events:none;transform-box:fill-box;transform-origin:center;transition:transform .2s}
+.div-hit{fill:transparent;cursor:pointer}
+.div-pt:hover .div-dot,.div-pt:focus-visible .div-dot,.div-pt.sel .div-dot{transform:scale(1.5);stroke:var(--fg)}
+.div-pt.sel .div-dot{fill:var(--a3)}
+.div-pt:focus{outline:none}
+.casos-semana{justify-self:start;width:max-content;max-width:100%;display:inline-flex;align-items:center;gap:8px;margin-top:10px;padding:6px 8px 6px 14px;border-radius:999px;background:var(--a3);color:var(--on3);font-size:.85rem;font-weight:700}
+.casos-semana button{border:0;border-radius:999px;background:var(--bg);color:var(--fg);font:inherit;font-size:.8rem;padding:4px 10px;cursor:pointer}
 .div-portal-card{background:var(--bg);border-radius:16px;padding:14px 16px;display:grid;gap:8px;border:1px solid var(--line)}
 .div-bar-bg{height:6px;border-radius:999px;background:var(--surface);overflow:hidden;position:relative}
 .div-bar-fill{height:100%;border-radius:999px;background:var(--a1);transition:width .6s ease}
 .orow.div-row{align-items:flex-start;padding:16px 0;gap:16px}
+.orow.div-row{grid-template-columns:64px minmax(0,1fr)}
+.div-blocos{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:10px;margin-top:10px;align-items:stretch}
+.div-blocos .div-consensus-pill{margin-top:0}
+.orow.div-row:hover b{text-decoration:none}
+.orow.div-row:hover .otxt>b{text-decoration:underline;text-underline-offset:3px}
+.div-cmp{display:grid;gap:8px;align-content:center;justify-items:start;padding:12px 14px;border-radius:12px;background:var(--a3);color:var(--on3)}
+.div-cmp-crit{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;opacity:.85}
+.div-cmp-l{display:flex;align-items:center;gap:8px;font-size:.88rem;white-space:nowrap}
+.cchip{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:84px;font-size:.8rem;font-weight:700;padding:2px 10px;border-radius:99px;background:var(--bg);color:var(--fg)}
+.cchip i{width:8px;height:8px;border-radius:50%}
+.div-cmp-fora>span:last-child{font-weight:700}
+@media (max-width:760px){.div-blocos{grid-template-columns:minmax(0,1fr)}}
+.casos-filtros{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-top:14px}
+.casos-filtros .ctl-row{min-width:0}
+.casos-filtros .seg{min-width:0;max-width:100%}
+.casos-mais{display:block;margin:18px auto 4px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit;font-weight:700;font-size:.9rem;padding:10px 18px;border-radius:999px;cursor:pointer}
+.casos-mais:hover{border-color:var(--fg)}
+.dcase{display:grid;gap:12px;padding:20px 0;border-top:1px solid var(--line);text-decoration:none;color:var(--fg)}
+.dc-top{display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;align-items:start}
+.dc-top .ph{width:64px;height:64px;border-radius:12px;background-color:var(--bg);overflow:hidden;position:relative}
+.dc-head{display:grid;gap:3px;min-width:0}
+.dc-head .mono{font-size:.78rem;color:var(--muted)}
+.dc-head h4{margin:0;font-size:1.1rem;line-height:1.3;font-weight:700}
+.dcase:hover h4{text-decoration:underline;text-underline-offset:3px}
+.dc-lbl{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.dc-resumo{margin:0;font-size:.95rem;line-height:1.7}
+.dc-crit{display:inline-block;font-size:.75rem;font-weight:700;padding:2px 9px;border:1px solid var(--line);border-radius:99px;margin-right:4px;color:var(--muted)}
+.tchip{display:inline-block;font-size:.8rem;font-weight:700;padding:1px 9px;border-radius:99px;line-height:1.5}
+.dc-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:12px}
+.dc-fora,.dc-cons{display:grid;gap:8px;align-content:start;padding:12px 14px;border-radius:12px;background:var(--bg);border-left:4px solid var(--tc)}
+.dc-t{font-size:.9rem;line-height:1.4;display:grid;gap:1px}
+.dc-t span{font-size:.75rem;font-weight:700;color:var(--fg)}
+.dc-mais{font-size:.8rem;color:var(--muted)}
+.dc-cta{font-size:.85rem;font-weight:700;color:var(--a3)}
+@media (max-width:700px){.dc-cols{grid-template-columns:minmax(0,1fr)}}
 .orow.div-row .otxt b{font-size:1.05rem;color:var(--fg);margin-bottom:4px;display:block;line-height:1.3}
-.div-consensus-pill{margin-top:8px;padding:10px 14px;background:var(--bg);border:1px solid var(--line);border-radius:10px;font-size:.84rem;color:var(--muted);line-height:1.45}
-.div-consensus-pill b{color:var(--fg);font-size:.85rem}
+.div-consensus-pill{margin-top:10px;padding:12px 14px;background:var(--bg);border-radius:12px;font-size:.88rem;color:var(--muted);line-height:1.45;display:grid;gap:8px}
+.div-consensus-pill span{display:grid;gap:2px}
+.orow.div-row .div-consensus-pill b{color:var(--fg);font-size:.78rem;font-weight:700;margin:0;line-height:1.3}
+.div-head{display:grid;gap:10px;margin-top:64px;padding-top:32px;border-top:1px solid var(--line)}
+.div-head h2{margin:0!important}
+.div-kick{color:var(--muted);font-weight:700}
+#filtro-casos button{padding:7px 14px;font-size:.85rem}
+#filtro-casos{min-width:0;max-width:100%}
+/* Índice de divergência por veículo: cinco cards iguais, em ordem de quem mais destoa */
+.rk-box{display:grid;gap:18px;background:var(--surface);border-radius:22px;padding:clamp(18px,2.4vw,28px)}
+.rk-head{display:grid;gap:6px}
+.rk-head .div-kick{display:none}
+.rk-head h3{margin:0;font-family:inherit;font-size:1.25rem;font-weight:700;letter-spacing:normal;line-height:1.2;text-transform:none}
+.rk-head p{margin:0;color:var(--muted);max-width:62ch;font-size:.92rem}
+.rk-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.rk-card{border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0;background:var(--bg);color:var(--fg)}
+.rk-tp{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.rk-pos{font-size:.9rem;font-weight:700;color:var(--muted);font-family:inherit!important}
+.rk-nm{display:flex;align-items:center;gap:8px;min-width:0}
+.rk-nm img{width:24px;height:24px;border-radius:6px;object-fit:contain;background:#fff}
+.rk-nm b{font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rk-num{display:grid;gap:2px}
+.rk-num b{font-size:1.9rem;line-height:1}
+.rk-num span{font-size:.78rem;color:var(--muted)}
+.rk-bar{height:6px;border-radius:999px;background:color-mix(in srgb,var(--fg) 8%,transparent);overflow:hidden}
+.rk-bar i{display:block;height:100%;width:0;border-radius:999px;background:var(--a3);transition:width 1s cubic-bezier(.2,.8,.2,1) .2s}
+.rk-card.in .rk-bar i{width:var(--w)}
+.rk-det{display:grid;gap:2px;font-size:.78rem;color:var(--muted)}
+.rk-det b{color:var(--fg)}
+.rk-perfil{margin:auto 0 0;font-size:.82rem;color:var(--muted);line-height:1.3}
+@media (max-width:1100px){.rk-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:640px){.rk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (prefers-reduced-motion:reduce){.rk-bar i{transition:none;width:var(--w)}}
+
+.ohead{grid-template-columns:minmax(0,1fr)}
+.obox{grid-template-columns:minmax(0,1fr)}
+@media (max-width:640px){.orow.div-row{grid-template-columns:56px minmax(0,1fr)}}
 
 </style>
 
@@ -681,9 +790,9 @@ footer ul a:hover{color:var(--fg)}
     <a class="logo" href="#inicio" aria-label="Entrelinhas, início"><span class="dots3"><i></i><i></i><i></i></span><b>Entrelinhas</b></a>
     <nav class="tabs" aria-label="Seções">
       <a href="#inicio" data-tab="inicio">Início</a>
-      <a href="#painel" data-tab="painel">Painel</a>
       <a href="#temas" data-tab="temas">Temas</a>
       <a href="#portais" data-tab="portais">Portais</a>
+      <a href="#painel" data-tab="painel">Painel</a>
       <a href="#metodologia" data-tab="metodologia">Metodologia</a>
       <a href="#sobre" data-tab="sobre">Sobre nós</a>
     </nav>
@@ -692,9 +801,9 @@ footer ul a:hover{color:var(--fg)}
 </header>
 <nav class="tabbar" aria-label="Seções">
   <a href="#inicio" data-tab="inicio">Início</a>
-  <a href="#painel" data-tab="painel">Painel</a>
   <a href="#temas" data-tab="temas">Temas</a>
   <a href="#portais" data-tab="portais">Portais</a>
+  <a href="#painel" data-tab="painel">Painel</a>
   <a href="#metodologia" data-tab="metodologia">Método</a>
   <a href="#sobre" data-tab="sobre">Sobre</a>
 </nav>
@@ -711,7 +820,7 @@ footer ul a:hover{color:var(--fg)}
   <div class="foot-cols">
     <div class="foot-about"><span class="dots3"><i></i><i></i><i></i></span><p>Comparador de cobertura jornalística. Agrupa notícias de diferentes portais sobre o mesmo fato e as separa pelo critério que você escolher.</p></div>
     <div><h4>Navegação</h4><ul>
-      <li><a href="#inicio">Início</a></li><li><a href="#painel">Painel</a></li><li><a href="#temas">Temas</a></li><li><a href="#portais">Portais</a></li>
+      <li><a href="#inicio">Início</a></li><li><a href="#temas">Temas</a></li><li><a href="#portais">Portais</a></li><li><a href="#painel">Painel</a></li>
       <li id="foot-met"><a href="#metodologia">Metodologia</a></li><li><a href="#sobre">Sobre nós</a></li></ul></div>
     <div><h4>Projeto</h4><ul>
       <li>Desenvolvido na FGV Comunicação</li><li>2026</li></ul>
@@ -781,7 +890,8 @@ const MOCK = {
     {id:"meio-ambiente", nome:"Meio ambiente", art:["y","c"]},
     {id:"saude", nome:"Saúde", art:["m","y"]},
     {id:"educacao", nome:"Educação", art:["y","c"]},
-    {id:"cultura", nome:"Cultura/Mundo", art:["m","c"]},
+    {id:"cultura", nome:"Cultura", art:["m","c"]},
+    {id:"entretenimento", nome:"Entretenimento", art:["c","m"]},
     {id:"esporte", nome:"Esporte", art:["y","m"]}
   ],
   subtemas: [
@@ -1052,7 +1162,7 @@ const pacote=n=>_pacotes[n]||(_pacotes[n]=fetch("capas/k"+n+".json").then(r=>r.o
 function carregaFoto(el){const k=el.dataset.foto;if(!FOTOS_IDX[k])return;const im=el.querySelector("img");if(!im)return;im.onload=()=>{im.hidden=false};im.src="capas/"+k+".webp"}
 const fotoIO="IntersectionObserver" in window?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){fotoIO.unobserve(e.target);carregaFoto(e.target)}}),{rootMargin:"300px"}):null;
 new MutationObserver(()=>document.querySelectorAll("[data-foto]:not([data-obs])").forEach(el=>{el.dataset.obs="1";fotoIO?fotoIO.observe(el):carregaFoto(el)})).observe(document.body,{childList:true,subtree:true});
-const temaNome=id=>{if(!id)return "";const t=MOCK.temas.find(x=>x.id===id||(x.id==="cultura"&&id.startsWith("cultura")));return t?t.nome:(id.toLowerCase().includes("cultura")?"Cultura/Mundo":id.charAt(0).toUpperCase()+id.slice(1))};
+const temaNome=id=>{if(!id)return "";const t=MOCK.temas.find(x=>x.id===id||(x.id==="cultura"&&id.startsWith("cultura")));return t?t.nome:(id.toLowerCase().includes("cultura")?"Cultura":id.charAt(0).toUpperCase()+id.slice(1))};
 const portalNome=id=>MOCK.portais.find(p=>p.id===id).nome;
 const FILL=["fill1","fill2","fill3"], AV=["var(--a1)","var(--a2)","var(--a3)"];
 
@@ -1062,11 +1172,12 @@ const FILL=["fill1","fill2","fill3"], AV=["var(--a1)","var(--a2)","var(--a3)"];
 let critDemo="tipo";
 async function viewInicio(){
   const subs=await Dados.subtemas(), temas=await Dados.temas(), top=subs.slice(0,6), cop=await Dados.subtema(subs[0].id);
-  const t="Compare notícias.", th="Compare<br>notícias.";
+  const t="Entrelinhas", th="Entrelinhas";
   return `
   <section class="hero" data-tone="light"><canvas class="halftone" aria-hidden="true"></canvas><div class="wrap hero-grid">
     <div class="hero-main">
       <h1 class="D split3" aria-label="${t}"><span class="l l1" aria-hidden="true">${th}</span><span class="l l2" aria-hidden="true">${th}</span><span class="l l3" aria-hidden="true">${th}</span><span class="l lm" aria-hidden="true">${th}</span></h1>
+      <p class="D hero-sub" data-r style="--d:.08s">Compare notícias.</p>
       <div class="hero-foot" data-r style="--d:.15s">
         <div class="hero-txt"><p>Veja como cada portal contou o mesmo fato. O <b class="mark">Entrelinhas</b> junta as notícias e separa do jeito que você escolher.</p></div>
       </div>
@@ -1125,13 +1236,27 @@ function destaques(subs){
   const i=out.findIndex(temFoto);if(i>0)out.unshift(out.splice(i,1)[0]);
   return out;
 }
+/* cor do verso de cada destaque: as três cores do site, sem repetir em cards vizinhos */
+const COR_VERSO=[3,1,2,2,1,3];
 function cardDestaque(s,i){
   const ti=MOCK.temas.findIndex(x=>x.id===s.tema), ids=[...new Set((MOCK.noticias[s.id]||[]).map(n=>n.portal))];
   const logos=ids.map(id=>LOGOS[id]?`<img src="${esc(LOGOS[id])}" alt="" title="${esc(portalNome(id))}">`:"").join("");
-  return `<a class="dest-card dc${i}${i<3?" ov":""}" href="#sub-${s.id}" data-r style="--d:${(i*.06).toFixed(2)}s">
+  // resumo: o trecho mais completo entre as notícias do acontecimento (texto dos próprios portais)
+  const ns=MOCK.noticias[s.id]||[], base=ns.slice().sort((a,b)=>(b.trecho||"").length-(a.trecho||"").length)[0];
+  const resumo=base&&base.trecho?base.trecho:"";
+  return `<a class="dest-flip pos${i}" href="#sub-${s.id}" data-r style="--d:${(i*.06).toFixed(2)}s" aria-label="${esc(s.titulo)}">
+   <div class="flip-in">
+    <div class="dest-card dc${i}${i<3?" ov":""} face">
     ${foto(fotoSub(s.id),"Foto do acontecimento")}
     <div class="dest-tx"><span class="chip ${FILL[(ti<0?0:ti)%3]}">${esc(temaNome(s.tema))}</span><h3>${esc(s.titulo)}</h3>
-    <div class="dest-meta"><span class="dest-logos">${logos}</span><span>${s.portais} portais · ${s.noticias} notícias · ${esc(s.atualizado||"")}</span></div></div></a>`;
+    <div class="dest-meta"><span class="dest-logos">${logos}</span><span>${s.portais} portais · ${s.noticias} notícias · ${esc(s.atualizado||"")}</span></div></div></div>
+    <div class="dest-back face" aria-hidden="true" style="--fb:var(--a${COR_VERSO[i]});--fo:var(--on${COR_VERSO[i]})">
+      <span class="chip">${esc(temaNome(s.tema))}</span>
+      <h4>${esc(s.titulo)}</h4>
+      ${resumo?`<p class="rot">Do que se trata${base?" · segundo "+esc(portalNome(base.portal)):""}</p><p class="res">${esc(resumo)}</p>`:""}
+      <span class="vai">Comparar as ${s.noticias} notícias de ${s.portais} portais <i aria-hidden="true">→</i></span>
+    </div>
+   </div></a>`;
 }
 /* Bolinhas do logo entre duas linhas: a cada volta, os rótulos mostram outros portais. */
 let lentesVistas=false;
@@ -1208,7 +1333,17 @@ function renderFeed(){
   trk.innerHTML=html+html;
   requestAnimationFrame(()=>{trk.style.animationDuration=(trk.scrollWidth/2/45)+"s"});
 }
-function afterInicio(){try{halftone()}catch(e){}try{lentes()}catch(e){}if(!$("#dseg"))return;renderDemo();$("#dseg").addEventListener("click",e=>{const b=e.target.closest("[data-demo]");if(!b)return;critDemo=b.dataset.demo;document.querySelectorAll("[data-demo]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.demo===critDemo));renderDemo()})}
+/* Título da capa: encolhe o "Entrelinhas" e o "Compare notícias." até caberem na coluna deles,
+   para nunca encostarem nas bolinhas (a largura real depende da fonte carregada em cada computador). */
+function ajustaTitulo(){
+  document.querySelectorAll(".hero .split3, .hero .hero-sub").forEach(el=>{
+    el.style.fontSize="";
+    const col=el.parentElement.clientWidth, w=el.scrollWidth;
+    if(col&&w>col){el.style.fontSize=(parseFloat(getComputedStyle(el).fontSize)*col/w*.97)+"px"}
+  });
+}
+addEventListener("resize",()=>{if($(".hero .split3"))ajustaTitulo()});
+function afterInicio(){try{ajustaTitulo();document.fonts&&document.fonts.ready.then(ajustaTitulo)}catch(e){}try{halftone()}catch(e){}try{lentes()}catch(e){}if(!$("#dseg"))return;renderDemo();$("#dseg").addEventListener("click",e=>{const b=e.target.closest("[data-demo]");if(!b)return;critDemo=b.dataset.demo;document.querySelectorAll("[data-demo]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.demo===critDemo));renderDemo()})}
 
 /* =====================================================================
    TEMAS — índice gigante com prévia que segue o mouse + faixa horizontal
@@ -1217,7 +1352,9 @@ async function viewTemas(){
   const temas=await Dados.temas(), subs=await Dados.subtemas();
   const ordem=subs.slice().sort((a,b)=>String(b.data||"").localeCompare(String(a.data||""))||rec(a.atualizado)-rec(b.atualizado));
   /* o mais recente de cada tema, para o carrossel não ficar todo em um tema só */
-  const vistos=new Set(), recentes=ordem.filter(s=>!vistos.has(s.tema)&&vistos.add(s.tema)).slice(0,8);
+  // prefere o mais recente COM foto em cada tema; só usa um sem foto se o tema não tiver nenhum com foto
+  const comFoto=ordem.filter(s=>fotoSub(s.id)), semFoto=ordem.filter(s=>!fotoSub(s.id));
+  const vistos=new Set(), recentes=[...comFoto,...semFoto].filter(s=>!vistos.has(s.tema)&&vistos.add(s.tema)).slice(0,8);
   return `
   <section class="ph-head fxbg" id="fx-head" data-tone="light"><canvas class="halftone" aria-hidden="true"></canvas><div class="wrap">
     <h1 class="D" data-r>Temas</h1>
@@ -1229,7 +1366,7 @@ async function viewTemas(){
     </div>
   </div></section>
   <section class="s" data-tone="dark"><div class="wrap">
-    <div class="sec-head" data-r><h2 class="D">Atualizados agora</h2><p>Os acontecimentos com notícia nova mais recente, de todos os temas.</p></div>
+    <div class="sec-head" data-r><h2 class="D">Atualizados agora</h2><p>Os acontecimentos que receberam notícias por último, em todos os temas.</p></div>
     <div class="carousel" id="car" data-r role="group" aria-label="Acontecimentos atualizados agora; arraste para girar"><div class="car-trk">${Array(3).fill(0).map((_,k)=>recentes.map((s,i)=>`<a class="ccard" href="#sub-${s.id}" ${k?'tabindex="-1" aria-hidden="true"':""}>${foto(fotoSub(s.id),"Foto do acontecimento")}<span class="chip ${FILL[i%3]}">${esc(temaNome(s.tema))}</span><h3>${esc(s.titulo)}</h3><span class="mono">${s.portais} portais · ${s.atualizado}</span></a>`).join("")).join("")}</div></div>
   </div></section>`;
 }
@@ -1256,7 +1393,7 @@ function afterTemas(){
   const idx=$("#index"), peek=$("#peek"), tag=$("#peek-tag"); if(!idx)return;
   idx.addEventListener("pointermove",e=>{const a=e.target.closest("[data-peek]");const r=idx.getBoundingClientRect();
     if(!a){peek.classList.remove("on");return}
-    const t=MOCK.temas[+a.dataset.peek];const im=$("#peek-img");if(im.dataset.t!==t.id){im.src=FOTOS_TEMA[t.id]||"";im.dataset.t=t.id}tag.textContent=t.nome;tag.className="tag "+FILL[+a.dataset.peek%3];
+    const t=MOCK.temas[+a.dataset.peek];const im=$("#peek-img");if(im.dataset.t!==t.id){im.src=FOTOS_TEMA[t.id]||FOTOS_TEMA["cultura"]||"";im.dataset.t=t.id}tag.textContent=t.nome;tag.className="tag "+FILL[+a.dataset.peek%3];
     peek.style.left=(e.clientX-r.left)+"px";peek.style.top=(e.clientY-r.top)+"px";peek.classList.add("on")});
   idx.addEventListener("pointerleave",()=>peek.classList.remove("on"));
   const car=$("#car"); car&&carousel(car);
@@ -1371,13 +1508,13 @@ let critP="tipo", portalSel=MOCK.portais[0].id, temaP="todos";
 async function viewPortais(){
   const temas=await Dados.temas();
   const div = (DADOS && DADOS.divergencias) ? DADOS.divergencias : {};
-  const totalFatos = div.total_eventos_analisados || 888;
-  const totalOutliers = div.total_outliers_tom || 245;
-  const taxaGeral = div.taxa_geral_tom || 27.6;
-  const totalPostura = div.total_outliers_postura || 21;
-  const ranking = div.ranking_portais || [];
-  const serie = div.serie_temporal || [];
-  const casos = div.casos_destaque || [];
+  const DV = calcDivergencias();
+  const totalFatos = DV.fatos;
+  const totalOutliers = DV.casos.length;
+  const ranking = DV.ranking;
+  const somaDiv = ranking.reduce((a,r)=>a+r.div_total,0) || 1;
+  const serie = DV.serie;
+  const casos = DV.casos;
 
   return `
   <section class="ph-head fxbg" id="portais-head" data-tone="light"><canvas class="halftone" aria-hidden="true"></canvas><div class="wrap">
@@ -1396,17 +1533,16 @@ async function viewPortais(){
     <div class="outliers" id="outliers"></div>
 
     <!-- ANÁLISE COMPARATIVA DE DIVERGÊNCIAS ENTRE PORTAIS -->
-    <div class="sec-head" data-r style="margin-top:64px;padding-top:32px;border-top:1px solid var(--line)">
-      <span class="mono" style="color:var(--a1);font-weight:700">Análise Comparativa da Imprensa</span>
+    <div class="div-head" data-r>
+      <span class="mono div-kick">Análise comparativa da imprensa</span>
       <h2 class="D" style="font-size:clamp(2rem,4.2vw,3.2rem);margin:6px 0 10px">Divergências editoriais</h2>
       <p style="color:var(--muted);max-width:70ch;font-size:1.02rem;margin:0">
         Análise sobre acontecimentos cobertos simultaneamente por três ou mais portais. Identifica quando um veículo destoa do tom ou da postura adotada pelo consenso da imprensa.
       </p>
       <dl class="fora-rec" data-r style="--d:.1s;margin-top:16px">
         <div><dt>Acontecimentos Analisados</dt><dd>${totalFatos} fatos</dd></div>
-        <div><dt>Divergência de Tom</dt><dd>${totalOutliers} (${taxaGeral}%)</dd></div>
-        <div><dt>Divergência de Postura</dt><dd>${totalPostura} casos</dd></div>
-        <div><dt>Período de Coleta</dt><dd>90 dias (15 semanas)</dd></div>
+        <div><dt>Casos de divergência</dt><dd>${totalOutliers}</dd></div>
+        <div><dt>Período analisado</dt><dd>${DV.periodo}</dd></div>
       </dl>
     </div>
 
@@ -1415,12 +1551,11 @@ async function viewPortais(){
       <div class="div-chart-head">
         <div>
           <h3 style="margin:0;font-size:1.25rem;font-weight:700">Evolução Semanal da Divergência Editorial</h3>
-          <p style="margin:4px 0 0;color:var(--muted);font-size:.92rem">Percentual de acontecimentos em cada semana onde pelo menos um portal divergiu do tom da maioria.</p>
+          <p style="margin:4px 0 0;color:var(--muted);font-size:.92rem">Percentual dos acontecimentos de cada semana em que pelo menos um portal divergiu da maioria no tom ou na postura.</p>
         </div>
         <dl class="fora-rec" style="margin:0;gap:8px">
-          <div><dt>Média Semanal</dt><dd>${taxaGeral}%</dd></div>
-          <div><dt>Pico Geral</dt><dd style="color:var(--a1)">45,5%</dd></div>
-          <div><dt>Pico Eleitoral</dt><dd style="color:var(--a1)">38,9%</dd></div>
+          <div><dt>Média semanal</dt><dd>${pctBR(DV.media)}</dd></div>
+          <div><dt>Pico</dt><dd>${DV.pico?pctBR(DV.pico.taxa)+" <small>("+esc(DV.pico.rotulo)+")</small>":"-"}</dd></div>
         </dl>
       </div>
       <div class="div-chart-svg-wrap" id="chart-wrap">
@@ -1429,36 +1564,33 @@ async function viewPortais(){
     </div>
 
     <!-- 2. RANKING DE VEÍCULOS -->
-    <div class="obox" data-r style="margin-bottom:24px">
-      <div class="ohead">
-        <h3>Índice de Divergência por Veículo</h3>
-        <p>Frequência em que cada portal adotou tom de manchete isolado em relação aos outros veículos.</p>
+    <div class="rk-box" data-r style="margin-bottom:24px">
+      <div class="rk-head">
+        <span class="mono div-kick">Quem mais destoa</span>
+        <h3>Índice de divergência por veículo</h3>
+        <p>Quantas vezes cada portal publicou uma manchete com tom ou postura diferente do que os outros portais usaram para o mesmo acontecimento.</p>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:10px">
+      <div class="rk-grid">
         ${ranking.map((r, i) => {
           const pInfo = MOCK.portais.find(p => p.nome === r.portal) || { id: r.portal.toLowerCase().replace(/[^a-z0-9]/g, '-') };
           const logo = LOGOS[pInfo.id];
-          const maxOut = ranking[0].outliers_tom || 1;
-          const barW = Math.round((r.outliers_tom / maxOut) * 100);
+          const maxOut = ranking[0].div_total || 1;
+          const barW = Math.round((r.div_total / maxOut) * 100);
           const rotuloPerfil = r.portal === "Metrópoles" ? "Mais expressivo e apelativo" :
                                r.portal === "Poder360" ? "Mais sóbrio e estritamente neutro" :
                                r.portal === "Agência Brasil" ? "Mais institucional e factual" :
                                r.portal === "G1" ? "Enfatiza risco e impacto social" : "Cobertura política e econômica";
+          const cor = ["rk-c2","rk-c1","rk-c3","rk-c0","rk-c0"][i] || "rk-c0";
           return `
-            <div class="div-portal-card" data-r style="--d:${i * 0.05}s">
-              <div style="display:flex;align-items:center;justify-content:space-between">
-                <div style="display:flex;align-items:center;gap:10px">
-                  ${logo ? `<img src="${logo}" style="width:26px;height:26px;border-radius:6px;object-fit:contain" alt="">` : ''}
-                  <b>${esc(r.portal)}</b>
-                </div>
-                <span class="mono" style="font-size:1.15rem;font-weight:800;color:var(--a1)">${r.outliers_tom}</span>
+            <div class="rk-card ${cor}${i===0?" rk-top":""}" data-r style="--d:${(i * 0.07).toFixed(2)}s">
+              <div class="rk-tp">
+                <span class="rk-pos">${i+1}º</span>
+                <span class="rk-nm">${logo ? `<img src="${logo}" alt="">` : ''}<b>${esc(r.portal)}</b></span>
               </div>
-              <div class="div-bar-bg"><div class="div-bar-fill" style="width:${barW}%"></div></div>
-              <div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted)">
-                <span>${r.pct_tom}% de todas as divergências</span>
-                <span>${r.outliers_postura} em postura</span>
-              </div>
-              <small style="color:var(--muted);font-size:.78rem;line-height:1.2">${rotuloPerfil}</small>
+              <div class="rk-num"><b>${r.div_total}</b><span>manchetes divergentes</span></div>
+              <div class="rk-bar"><i style="--w:${barW}%"></i></div>
+              <div class="rk-det"><span><b>${(r.div_total/somaDiv*100).toFixed(1)}%</b> de todas as divergências</span></div>
+              <p class="rk-perfil">${rotuloPerfil}</p>
             </div>
           `;
         }).join('')}
@@ -1471,20 +1603,21 @@ async function viewPortais(){
         <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px">
           <div>
             <h3 style="margin:0;font-size:1.25rem;font-weight:700">Casos de Divergência Editorial <span class="ocount" id="casos-count">${casos.length}</span></h3>
-            <p style="margin:4px 0 0;font-size:.92rem;color:var(--muted)">Clique na notícia para abrir o comparativo completo do acontecimento com todos os portais.</p>
-          </div>
-          <div class="tabs" id="filtro-casos" style="gap:4px">
-            <button type="button" class="cta ghost" data-f="todos" aria-pressed="true" style="padding:6px 14px;font-size:.82rem">Todos</button>
-            <button type="button" class="cta ghost" data-f="economia" aria-pressed="false" style="padding:6px 14px;font-size:.82rem">Economia</button>
-            <button type="button" class="cta ghost" data-f="politica" aria-pressed="false" style="padding:6px 14px;font-size:.82rem">Política</button>
-            <button type="button" class="cta ghost" data-f="saude" aria-pressed="false" style="padding:6px 14px;font-size:.82rem">Saúde</button>
-            <button type="button" class="cta ghost" data-f="cultura/mundo" aria-pressed="false" style="padding:6px 14px;font-size:.82rem">Cultura/Mundo</button>
+            <p style="margin:4px 0 0;font-size:.92rem;color:var(--muted)">Acontecimentos em que um portal teve tom ou postura diferente da maioria dos portais. Clique num caso para comparar as matérias. No gráfico acima, clique numa semana para ver só os casos dela.</p>
           </div>
         </div>
+        <div class="casos-filtros">
+          <div class="ctl-row"><span class="mono">Critério</span><div class="seg" id="filtro-crit" role="group" aria-label="Critério">
+            ${[["todos","Todos"],["tom","Tom"],["postura","Postura"]].map(([k,n])=>`<button type="button" data-fc="${k}" aria-pressed="${DIVF.crit===k}">${n}</button>`).join("")}
+          </div></div>
+          <div class="ctl-row"><span class="mono">Tema</span><div class="seg" id="filtro-casos" role="group" aria-label="Tema">
+            <button type="button" data-f="todos" aria-pressed="${DIVF.tema==="todos"}">Todos</button>
+            ${(()=>{const n={};casos.forEach(c=>{if(c.tema)n[c.tema]=(n[c.tema]||0)+1});return Object.keys(n).sort((a,b)=>n[b]-n[a]).map(t=>`<button type="button" data-f="${esc(t)}" aria-pressed="${DIVF.tema===t}">${esc(temaNome(t))}</button>`).join("")})()}
+          </div></div>
+        </div>
       </div>
-      <ul class="olist" id="casos-lista" style="margin-top:14px">
-        ${renderCasosDivergencia(casos, "todos")}
-      </ul>
+      <ul class="olist" id="casos-lista" style="margin-top:14px"></ul>
+      <a class="cta ghost omais" href="#divergencias" id="casos-mais" hidden>Ver todos os casos de divergência <i aria-hidden="true">→</i></a>
     </div>
 
   </div></section>`;
@@ -1536,7 +1669,7 @@ function rowsCard(G,C,leg){
       <p class="mono tt-note">Toque num tema para ver só ele.</p>
     </div>`;
 }
-/* Termômetro: uma coluna em pé com as três opções empilhadas de baixo para cima; a linha marca 50% (limite do padrão) */
+/* Termômetro: uma coluna em pé com as três opções empilhadas de baixo para cima; a linha marca 60% (limite do padrão) */
 function thermoCard(G,C){
   const t=G.porTema.find(x=>x.id===temaP), n=t?t.dist.reduce((a,b)=>a+b,0):0;
   return `<div class="dcard tt thermo-card">
@@ -1545,7 +1678,7 @@ function thermoCard(G,C){
       ${n?`<div class="thermo-wrap">
         <div class="thermo" role="img" aria-label="">
           <span class="bulb"></span>
-          <div class="tubewrap"><div class="tube">${[0,1,2].map(i=>`<i class="tseg seg${i}" style="width:0" data-tip=""></i>`).join("")}</div><span class="mark50"><b>50%</b></span></div>
+          <div class="tubewrap"><div class="tube">${[0,1,2].map(i=>`<i class="tseg seg${i}" style="width:0" data-tip=""></i>`).join("")}</div><span class="mark50" style="left:${PADRAO_MIN}%"><b>${PADRAO_MIN}%</b></span></div>
         </div>
         <ul class="tlabels">${[0,1,2].map(i=>`<li data-i="${i}"><span class="tk seg${i}"></span><div><b class="tp" data-v="0">0%</b><span class="tn">${esc(C.opcoes[i])}</span><small class="tc"></small></div></li>`).join("")}</ul>
       </div>`:`<p class="oempty" style="margin:0">Este portal não publicou notícias classificadas em ${esc(temaNome(temaP))}.</p>`}
@@ -1600,11 +1733,11 @@ function leaveView(dash,from,toTema){
 }
 
 /* Notícias fora do padrão
-   Padrão = a opção do critério que reúne 50% ou mais das notícias do portal no recorte.
+   Padrão = a opção do critério que reúne 60% ou mais das notícias do portal no recorte.
    Tudo o que caiu nas outras opções fica fora do padrão.
    Conta as notícias do portal no recorte, sem mínimo de acontecimentos. */
-const PADRAO_MIN=50, MIN_NOT_PADRAO=3;
-/* Índice da opção que é o padrão, ou -1. Exige 50% ou mais e uma única opção na frente:
+const PADRAO_MIN=60, MIN_NOT_PADRAO=3;
+/* Índice da opção que é o padrão, ou -1. Exige 60% ou mais e uma única opção na frente:
    empate (por exemplo, 2 notícias, cada uma numa coluna) não define padrão. */
 function padraoDe(dist){const q=pctOf(dist),m=Math.max(...q),n=dist.reduce((a,b)=>a+b,0);if(n<MIN_NOT_PADRAO||m<PADRAO_MIN||q.filter(v=>v===m).length>1||!dist.some(Boolean))return -1;return q.indexOf(m)}
 function foraCalc(p,C,D){
@@ -1629,7 +1762,7 @@ function renderOutliers(p,C,_pct,D){
   if(F.estado==="pouco"){
     box.innerHTML=shell(`<h3>Notícias fora do padrão</h3></div><p class="oempty">${esc(p.nome)} tem só ${F.itens.length} ${F.itens.length===1?"notícia classificada":"notícias classificadas"} ${temaP==="todos"?"neste critério":"em "+esc(temaNome(temaP))}. É pouco para definir um padrão.</p></div>`);return}
   if(F.estado==="sem"){
-    box.innerHTML=shell(`<h3>Notícias fora do padrão</h3></div><p class="oempty">Neste recorte, nenhuma opção fica sozinha com metade ou mais das notícias de ${esc(p.nome)}, então não há um padrão definido.</p></div>`);return}
+    box.innerHTML=shell(`<h3>Notícias fora do padrão</h3></div><p class="oempty">Neste recorte, nenhuma opção chega a ${PADRAO_MIN}% das notícias de ${esc(p.nome)}, então não há um padrão definido.</p></div>`);return}
   const {fora,pct,dom,itens}=F;
   box.innerHTML=shell(`<h3>Notícias fora do padrão${fora.length?` <span class="ocount">${fora.length}</span>`:""}</h3>
       <p>O padrão de ${esc(p.nome)} aqui é "${esc(C.opcoes[dom]).toLowerCase()}", com ${pct[dom]}% das ${itens.length} notícias. As que caíram em outra opção ficam fora do padrão.</p></div>
@@ -1692,42 +1825,37 @@ function gerarSvgSerieTemporal(serie) {
     `;
   }).join("");
 
-  const iAgo = 0;
-  const iSet = pts.findIndex(p => p.semana >= "2026-35");
-  const iOut = pts.findIndex(p => p.semana >= "2026-39");
-  const iNov = pts.findIndex(p => p.semana >= "2026-44");
-  const monthLabels = [
-    { x: pts[iAgo].x, label: "Agosto" },
-    { x: pts[iSet >= 0 ? iSet : 4].x, label: "Setembro" },
-    { x: pts[iOut >= 0 ? iOut : 8].x, label: "Outubro" },
-    { x: pts[iNov >= 0 ? iNov : 13].x, label: "Novembro" }
-  ].map(m => `
-    <text x="${m.x}" y="${H - 12}" text-anchor="start" font-size="11" font-weight="700" fill="var(--fg)" font-family="var(--mono)">${m.label}</text>
+  const MESES_N=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  const monthLabels = pts.filter((p,i)=>i===0||p.mes!==pts[i-1].mes).map(p=>({x:p.x,label:MESES_N[p.mes]})).map(m => `
+    <text x="${m.x}" y="${H - 12}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--fg)" font-family="var(--mono)">${m.label}</text>
     <line x1="${m.x}" y1="${padT + plotH}" x2="${m.x}" y2="${padT + plotH + 6}" stroke="var(--muted)" stroke-width="1.5"/>
   `).join("");
 
   const picoPt = pts.reduce((max, p) => p.taxa > max.taxa ? p : max, pts[0]);
   const picoCallout = `
-    <line x1="${picoPt.x}" y1="${picoPt.y - 10}" x2="${picoPt.x}" y2="${padT + plotH}" stroke="var(--a1)" stroke-dasharray="3,3" stroke-width="1.2" opacity="0.6"/>
-    <rect x="${picoPt.x - 38}" y="${picoPt.y - 30}" width="76" height="20" rx="6" fill="var(--a1)"/>
-    <text x="${picoPt.x}" y="${picoPt.y - 16}" text-anchor="middle" font-size="10" font-weight="800" fill="#fff" font-family="var(--mono)">PICO ${picoPt.taxa}%</text>
+    <line x1="${picoPt.x}" y1="${picoPt.y - 10}" x2="${picoPt.x}" y2="${padT + plotH}" stroke="var(--a3)" stroke-dasharray="3,3" stroke-width="1.2" opacity="0.6"/>
+    <rect x="${Math.min(picoPt.x, W - 46) - 42}" y="${picoPt.y - 32}" width="84" height="22" rx="11" fill="var(--a3)"/>
+    <text x="${Math.min(picoPt.x, W - 46)}" y="${picoPt.y - 17}" text-anchor="middle" font-size="10" font-weight="800" fill="var(--on3)" font-family="var(--mono)">PICO ${pctBR(picoPt.taxa)}</text>
   `;
 
   const dots = pts.map(p => `
-    <circle cx="${p.x}" cy="${p.y}" r="4.5" fill="var(--bg)" stroke="var(--a1)" stroke-width="2.5" class="div-dot" data-tip="${p.rotulo}: ${p.outliers} divergências em ${p.total_eventos} fatos (${p.taxa}%)"/>
+    <g class="div-pt" data-semana="${p.semana}" data-tip="${p.rotulo}: ${p.eventosDiv} de ${p.total_eventos} fatos com divergência (${pctBR(p.taxa)}), ${p.outliers} ${p.outliers===1?"caso":"casos"}.${p.outliers?" Clique para ver os casos.":""}" tabindex="0" role="button" aria-label="${p.rotulo}: ${p.taxa}% de divergência. Ver os casos desta semana">
+      <circle cx="${p.x}" cy="${p.y}" r="16" class="div-hit"/>
+      <circle cx="${p.x}" cy="${p.y}" r="4.5" fill="var(--bg)" stroke="var(--a3)" stroke-width="2.5" class="div-dot"/>
+    </g>
   `).join("");
 
   return `
     <svg viewBox="0 0 ${W} ${H}" class="div-chart-svg" aria-label="Evolução semanal da divergência editorial">
       <defs>
         <linearGradient id="divGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="var(--a1)" stop-opacity="0.32"/>
-          <stop offset="100%" stop-color="var(--a1)" stop-opacity="0.02"/>
+          <stop offset="0%" stop-color="var(--a3)" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="var(--a3)" stop-opacity="0.02"/>
         </linearGradient>
       </defs>
       ${gridLines}
       <path d="${areaD}" fill="url(#divGrad)"/>
-      <path d="${curveD}" fill="none" stroke="var(--a1)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="${curveD}" fill="none" stroke="var(--a3)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
       ${picoCallout}
       ${dots}
       ${monthLabels}
@@ -1735,37 +1863,116 @@ function gerarSvgSerieTemporal(serie) {
   `;
 }
 
-function renderCasosDivergencia(casos, filtroTema) {
-  const filtrados = (!filtroTema || filtroTema === "todos") ? casos : casos.filter(c => (c.tema||"").toLowerCase() === filtroTema.toLowerCase());
-  if (!filtrados.length) return `<li class="oempty" style="padding:24px 0">Nenhum caso divergente encontrado para este tema.</li>`;
-
-  return filtrados.map(c => {
-    const fid = fotoSub(c.grupo_id);
-    const capaHtml = foto(fid, c.grupo_titulo, "sm");
-
-    const tomCor = c.tom_outlier === "negativo" ? "var(--a1)" : c.tom_outlier === "positivo" ? "var(--a3)" : "var(--a2)";
-    const primeiroConsenso = (c.outros_titulos && c.outros_titulos.length) ? c.outros_titulos[0] : null;
-    const txtConsenso = primeiroConsenso ? `${primeiroConsenso.portal}: "${primeiroConsenso.titulo}"` : "";
-
+/* Divergências calculadas no site a partir das classificações (mesma regra do script do grupo):
+   acontecimento com 3+ portais classificados no critério; uma manchete por portal (a primeira);
+   consenso = opção de mais da metade dos portais; caso = portal fora do consenso. */
+const pctBR = v => (Math.round(v*10)/10).toLocaleString("pt-BR") + "%";
+let _DV=null;
+function calcDivergencias(){
+  if(_DV) return _DV;
+  const MES=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+  const nomeP = id => { const p=(MOCK.portais||[]).find(x=>x.id===id); return p?p.nome:id };
+  const subs = Object.fromEntries((MOCK.subtemas||[]).map(x=>[x.id,x]));
+  const NOT = (DADOS && DADOS.noticias) || {};
+  const casos=[], semanas={};
+  let ultima=null, primeira=null;
+  const segunda = d => { const x=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())); x.setUTCDate(x.getUTCDate()-((x.getUTCDay()+6)%7)); return x };
+  for(const [sid, ns] of Object.entries(NOT)){
+    const datas = ns.map(n=>n.data).filter(Boolean).sort((a,b)=>new Date(a)-new Date(b));
+    if(!datas.length) continue;
+    const d0=new Date(datas[0]), seg=segunda(d0), chave=seg.toISOString().slice(0,10);
+    let analisado=false, divergiu=false;
+    for(const crit of ["tom","postura"]){
+      const C=CRITERIOS.find(c=>c.id===crit), por={};
+      ns.forEach(n=>{ const v=n.cls&&n.cls[crit]; if(v&&!(n.portal in por)) por[n.portal]={v:Array.isArray(v)?v[0]:v, n} });
+      const ps=Object.keys(por); if(ps.length<3) continue;
+      if(crit==="tom") analisado=true;
+      const cont={}; ps.forEach(p=>cont[por[p].v]=(cont[por[p].v]||0)+1);
+      const [top,q]=Object.entries(cont).sort((a,b)=>b[1]-a[1])[0];
+      if(q<=ps.length/2) continue;
+      ps.filter(p=>String(por[p].v)!==top).forEach(p=>{
+        divergiu=true;
+        casos.push({sid, evento:(subs[sid]||{}).titulo||por[p].n.titulo, data:datas[0], semana:chave, tema:(subs[sid]||{}).tema||"",
+          crit, opcoes:C.opcoes, val:+por[p].v, cons:+top, portal:nomeP(p), titulo:por[p].n.titulo,
+          qtd:q, total:ps.length, outros:ps.filter(o=>o!==p).map(o=>({portal:nomeP(o), titulo:por[o].n.titulo, val:+por[o].v}))});
+      });
+    }
+    if(!analisado) continue;
+    const w = semanas[chave] || (semanas[chave]={seg, total:0, div:0, casos:0});
+    w.total++; if(divergiu) w.div++;
+    if(!ultima||d0>ultima) ultima=d0; if(!primeira||d0<primeira) primeira=d0;
+  }
+  casos.forEach(c=>{ if(semanas[c.semana]) semanas[c.semana].casos++ });
+  const dm = d => String(d.getUTCDate()).padStart(2,"0");
+  const rot = (a,b) => { if(a.getTime()===b.getTime()) return `${dm(a)} de ${MES[a.getUTCMonth()]}`;
+    if(a.getUTCMonth()===b.getUTCMonth()) return `${dm(a)} ${(b-a)===864e5?"e":"a"} ${dm(b)} de ${MES[a.getUTCMonth()]}`;
+    return `${dm(a)} de ${MES[a.getUTCMonth()]} a ${dm(b)} de ${MES[b.getUTCMonth()]}` };
+  const serie=[];
+  if(primeira){
+    const fimD=new Date(Date.UTC(ultima.getUTCFullYear(),ultima.getUTCMonth(),ultima.getUTCDate()));
+    for(let s0=segunda(primeira); s0<=fimD; s0=new Date(s0.getTime()+7*864e5)){
+      const k=s0.toISOString().slice(0,10), w=semanas[k]||{total:0,div:0,casos:0};
+      const fimS=new Date(Math.min(s0.getTime()+6*864e5, fimD.getTime())), qui=new Date(s0.getTime()+3*864e5);
+      serie.push({semana:k, rotulo:rot(s0,fimS), mes:qui.getUTCMonth(), total_eventos:w.total, eventosDiv:w.div, outliers:w.casos, taxa:w.total?w.div/w.total*100:0});
+    }
+  }
+  const rk={}; casos.forEach(c=>{const r=rk[c.portal]||(rk[c.portal]={portal:c.portal,div_total:0}); r.div_total++});
+  const ranking=Object.values(rk).sort((a,b)=>b.div_total-a.div_total);
+  casos.sort((a,b)=>new Date(b.data)-new Date(a.data));
+  const comDados=serie.filter(x=>x.total_eventos);
+  const media=comDados.length?comDados.reduce((a,x)=>a+x.taxa,0)/comDados.length:0;
+  const pico=comDados.reduce((m,x)=>!m||x.taxa>m.taxa?x:m,null);
+  const nS=serie.length, periodo = primeira ? `${nS} ${nS===1?"semana":"semanas"}` : "-";
+  const fatos=Object.values(semanas).reduce((a,w)=>a+w.total,0);
+  return _DV={casos, serie, ranking, fatos, media, pico, periodo};
+}
+const corOp = i => String(Math.max(0,Math.min(2,i))+1);
+const opChip = (c,i) => `<span class="tchip" style="background:var(--a${corOp(i)});color:var(--on${corOp(i)})">${esc(String(c.opcoes[i]||"").toLowerCase())}</span>`;
+const cmpChip = (c,i) => `<span class="cchip"><i style="background:var(--a${corOp(i)})"></i>${esc(String(c.opcoes[i]||"").toLowerCase())}</span>`;
+const DIVF={semana:null, crit:"todos", tema:"todos"};
+const casosFiltrados=()=>calcDivergencias().casos.filter(c=>(!DIVF.semana||c.semana===DIVF.semana)&&(DIVF.crit==="todos"||c.crit===DIVF.crit)&&(DIVF.tema==="todos"||c.tema===DIVF.tema));
+/* Página com todos os casos de divergência da semana, critério e tema escolhidos em Portais */
+function viewCasosDiv(){
+  const f=casosFiltrados(), w=DIVF.semana?calcDivergencias().serie.find(x=>x.semana===DIVF.semana):null;
+  const sem=w?w.rotulo:"Todas as semanas", crit=DIVF.crit==="todos"?"Tom e postura":DIVF.crit==="tom"?"Tom":"Postura", tema=DIVF.tema==="todos"?"Todos os temas":temaNome(DIVF.tema);
+  const corpo=f.length?`<p style="color:var(--muted);margin:0 0 18px;max-width:70ch">${f.length===1?"Neste caso":"Nestes "+f.length+" casos"}, um portal teve ${DIVF.crit==="postura"?"postura":DIVF.crit==="tom"?"tom":"tom ou postura"} diferente da maioria dos portais que cobriram o mesmo acontecimento.</p><div class="obox"><ul class="olist">${renderCasosDivergencia(f)}</ul></div>`
+    :`<p class="oempty">Nenhum caso de divergência neste recorte.</p>`;
+  return `
+  <section class="ph-head fxbg" id="casosdiv-head" data-tone="light"><canvas class="halftone" aria-hidden="true"></canvas><div class="wrap">
+    <h1 class="D fora-h1 casos-h1" data-r>Casos de<br>divergência</h1>
+    <dl class="fora-rec" data-r style="--d:.1s"><div><dt>Semana</dt><dd>${esc(sem)}</dd></div><div><dt>Critério</dt><dd>${esc(crit)}</dd></div><div><dt>Tema</dt><dd>${esc(tema)}</dd></div></dl>
+    <a class="cta ghost" href="#portais" style="position:relative;z-index:2;margin-top:18px">← Voltar para Portais</a>
+  </div></section>
+  <section class="s" data-tone="light" style="padding-top:0"><div class="wrap">${corpo}</div></section>`;
+}
+function renderCasosDivergencia(casos) {
+  if (!casos.length) return `<li class="oempty" style="padding:24px 0">Nenhum caso de divergência com esses filtros.</li>`;
+  return casos.map(c => {
+    const capaHtml = foto(fotoSub(c.sid), c.evento, "sm");
+    const nOutros = c.total - 1;
+    const quem = c.qtd >= nOutros ? `Outros ${nOutros} portais` : `${c.qtd} de ${nOutros} portais`;
+    const ex = c.outros.find(o => o.val === c.cons);
     return `
       <li>
-        <a class="orow div-row" href="#sub-${c.grupo_id}">
+        <a class="orow div-row" href="#sub-${c.sid}">
           ${capaHtml}
           <div class="otxt">
-            <b>${esc(c.titulo_outlier)}</b>
-            <span class="mono">${esc(c.portal_outlier)} · ${esc(temaNome(c.tema))} · ${fmtData(c.data)}</span>
-            <div class="div-consensus-pill">
-              <b>Acontecimento:</b> ${esc(c.grupo_titulo)}
-              ${txtConsenso ? `<br><b>Consenso (${c.qtd_consenso} portais):</b> ${esc(txtConsenso)}` : ''}
+            <b>${esc(c.titulo)}</b>
+            <span class="mono">${esc(temaNome(c.tema))} · ${fmtData(c.data)}</span>
+            <div class="div-blocos">
+              <div class="div-consensus-pill">
+                <span><b>Acontecimento</b>${esc(c.evento)}</span>
+                ${ex ? `<span><b>Como a maioria noticiou</b>${esc(ex.portal)}: "${esc(ex.titulo)}"</span>` : ''}
+              </div>
+              <div class="div-cmp">
+                <span class="div-cmp-crit">Divergência de ${c.crit === "tom" ? "tom" : "postura"}</span>
+                <span class="div-cmp-l div-cmp-fora">${cmpChip(c,c.val)}<span>${esc(c.portal)}</span></span>
+                <span class="div-cmp-l">${cmpChip(c,c.cons)}<span>${quem}</span></span>
+              </div>
             </div>
           </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
-            <span class="otag"><i style="background:${tomCor}"></i>${esc(c.portal_outlier)}: ${esc(c.tom_outlier)}</span>
-            <span class="mono" style="font-size:.78rem;color:var(--muted)">Consenso: ${esc(c.tom_consenso)}</span>
-          </div>
         </a>
-      </li>
-    `;
+      </li>`;
   }).join('');
 }
 
@@ -1780,7 +1987,7 @@ async function viewFora(){
   const p=MOCK.portais.find(x=>x.id===portalSel), C=CRITERIOS.find(c=>c.id===critP);
   const D=await Dados.painel(portalSel,critP,temaP), F=foraCalc(p,C,D);
   const rec=`${esc(p.nome)} · ${esc(C.nome)} · ${temaP==="todos"?"todos os temas":esc(temaNome(temaP))}`;
-  const corpo=F.estado!=="ok"?`<p class="oempty">Não há um padrão definido neste recorte.</p>`
+  const corpo=F.estado!=="ok"?`<p class="oempty">Não há um padrão definido neste recorte: nenhuma opção chega a ${PADRAO_MIN}% das notícias.</p>`
     :F.fora.length?`<p style="color:var(--muted);margin:0 0 18px;max-width:70ch">O padrão de ${esc(p.nome)} aqui é "${esc(C.opcoes[F.dom]).toLowerCase()}", com ${F.pct[F.dom]}% das ${F.itens.length} notícias. Estas ${F.fora.length} caíram em outra opção.</p><div class="obox">${listaFora(F.fora,C,F.pct)}</div>`
     :`<p class="oempty">Todas as notícias seguem o padrão.</p>`;
   return `
@@ -1809,26 +2016,34 @@ function afterPortais(){
   renderPortais(); 
   chartTips($("#dash"));
   const cw = $("#chart-wrap");
-  if(cw) chartTips(cw);
-  const btnContainer = $("#filtro-casos");
-  if(btnContainer){
-    btnContainer.addEventListener("click", e=>{
-      const btn = e.target.closest("[data-f]");
-      if(!btn) return;
-      const temaFiltro = btn.dataset.f;
-      btnContainer.querySelectorAll("[data-f]").forEach(b => b.setAttribute("aria-pressed", b.dataset.f === temaFiltro));
-      const div = (DADOS && DADOS.divergencias) ? DADOS.divergencias : {};
-      const lista = $("#casos-lista");
-      const badge = $("#casos-count");
-      if(lista){
-        const casos = div.casos_destaque || [];
-        const matchTema = (cTema, f) => { const ct = (cTema||"").toLowerCase(), ft = f.toLowerCase(); return ct === ft || (ft.startsWith("cultura") && ct.startsWith("cultura")); };
-        const filtrados = (temaFiltro === "todos") ? casos : casos.filter(c => matchTema(c.tema, temaFiltro));
-        lista.innerHTML = renderCasosDivergencia(casos, temaFiltro);
-        if(badge) badge.textContent = filtrados.length;
-      }
-    });
+  if(cw){
+    chartTips(cw);
+    cw.addEventListener("click",e=>{const g=e.target.closest(".div-pt");if(g)escolheSemana(g)});
+    cw.addEventListener("keydown",e=>{const g=e.target.closest(".div-pt");if(g&&(e.key==="Enter"||e.key===" ")){e.preventDefault();escolheSemana(g)}});
   }
+  const EST=DIVF;
+  const DV=calcDivergencias();
+  function mostraCasos(){
+    const lista=$("#casos-lista"); if(!lista) return;
+    const f=casosFiltrados();
+    lista.innerHTML=renderCasosDivergencia(f.slice(0,FORA_RESUMO));
+    $("#casos-count").textContent=f.length;
+    const mais=$("#casos-mais"); mais.hidden=f.length<=FORA_RESUMO; mais.innerHTML=`Ver todos os ${f.length} casos de divergência <i aria-hidden="true">→</i>`;
+    let av=$("#casos-semana");
+    if(EST.semana){const w=DV.serie.find(x=>x.semana===EST.semana), txt=`Semana ${w?w.rotulo:""}`;
+      if(av)av.firstChild.textContent=txt;else{lista.insertAdjacentHTML("beforebegin",`<div class="casos-semana" id="casos-semana"><span>${esc(txt)}</span><button type="button">Ver todas as semanas</button></div>`);
+        $("#casos-semana button").addEventListener("click",()=>{EST.semana=null;if(cw)cw.querySelectorAll(".div-pt").forEach(x=>x.classList.remove("sel"));mostraCasos()})}}
+    else if(av) av.remove();
+    if(cw) cw.querySelectorAll(".div-pt").forEach(x=>x.classList.toggle("sel",x.dataset.semana===EST.semana));
+  }
+  function escolheSemana(g){
+    EST.semana = EST.semana===g.dataset.semana ? null : g.dataset.semana; mostraCasos();
+    if(EST.semana){const ob=$("#casos-lista").closest(".obox");scrollTo({top:ob.getBoundingClientRect().top+scrollY-90,behavior:reduce?"auto":"smooth"})}
+  }
+  const segF=(sel,attr,chave)=>{const box=$(sel); if(box) box.addEventListener("click",e=>{const b=e.target.closest(`[${attr}]`); if(!b)return;
+    EST[chave]=b.getAttribute(attr); box.querySelectorAll(`[${attr}]`).forEach(x=>x.setAttribute("aria-pressed",x===b)); mostraCasos()})};
+  segF("#filtro-crit","data-fc","crit"); segF("#filtro-casos","data-f","tema");
+  mostraCasos();
   $("#view").addEventListener("click",function h(e){
     if(!location.hash.startsWith("#portais")){$("#view").removeEventListener("click",h);return}
     const s=e.target.closest("[data-psel]"), c=e.target.closest("[data-pc]"), t=e.target.closest("[data-pt]");
@@ -1844,7 +2059,7 @@ function afterPortais(){
 const PASSOS=[
   {t:"Coletamos",
    d:"Buscamos as notícias de cinco portais no Google Notícias: G1, CNN Brasil, Metrópoles, Poder360 e Agência Brasil. As buscas são feitas por portal, por dia e por tema. De cada notícia guardamos título, portal, data e link.",
-   i:["Acompanhamos sete temas: política, economia, saúde, educação, meio ambiente, esporte e cultura/mundo.","A base é uma amostra ampla do que cada portal publicou, não a cobertura completa."]},
+   i:["Acompanhamos oito temas: política, economia, saúde, educação, meio ambiente, esporte, cultura e entretenimento.","A base é uma amostra ampla do que cada portal publicou, não a cobertura completa."]},
   {t:"Agrupamos",
    d:"Um modelo de linguagem treinado em português transforma cada título em um vetor que representa o seu significado. Títulos de portais diferentes com significado muito parecido, publicados em até 48 horas, formam um mesmo acontecimento.",
    i:["Não agrupamos por palavra-chave: \u201cjuros\u201d ou \u201cinflação\u201d aparecem em dezenas de fatos diferentes.","Só aparecem no site os acontecimentos cobertos por três ou mais portais."]},
@@ -1878,7 +2093,7 @@ function dotState(step){
 }
 function viewMetodologia(){
   return `
-  <section class="ph-head fxbg full" id="fx-head" data-tone="light"><canvas class="halftone" aria-hidden="true"></canvas><div class="wrap">
+  <section class="ph-head fxbg" id="fx-head" data-tone="light"><canvas class="halftone" aria-hidden="true"></canvas><div class="wrap">
     <h1 class="D" data-r style="font-size:calc(clamp(3.8rem,13vw,13rem) * var(--fs))">Como<br>classificamos</h1>
   </div></section>
   <section data-tone="dark" style="padding-block:40px 80px"><div class="wrap story">
@@ -1932,12 +2147,12 @@ function afterMetodologia(){
 }
 function viewSobre(){
   return `
-  <section class="ph-head fxbg full" id="fx-head" data-tone="light"><canvas class="halftone" aria-hidden="true"></canvas><div class="wrap">
+  <section class="ph-head fxbg" id="fx-head" data-tone="light"><canvas class="halftone" aria-hidden="true"></canvas><div class="wrap">
     <h1 class="D" data-r style="font-size:calc(clamp(3.8rem,13vw,13rem) * var(--fs))">Sobre nós</h1>
     <p class="about-lead" data-r style="--d:.12s;margin-top:clamp(24px,4vw,44px)">Só comparamos o que trata do <span class="mark">mesmo fato</span>. O critério e os portais quem escolhe é você.</p>
   </div></section>
 
-  <section class="s" data-tone="light"><div class="wrap about-sec">
+  <section class="s" data-tone="light" style="padding-top:clamp(16px,3vw,40px)"><div class="wrap about-sec">
     <div class="about-grid" data-r><h2 class="D">Objetivo</h2><div>
       <p>Mostrar, lado a lado, como diferentes portais trataram exatamente o mesmo acontecimento. Juntamos as notícias de um fato, separamos em três colunas pelo critério que você escolher e levamos você até a fonte original.</p>
       <p class="m">Não escrevemos notícias e não reproduzimos o texto dos portais. Mostramos título, trecho e link: a leitura completa acontece sempre no veículo que publicou.</p></div></div>
@@ -2017,7 +2232,7 @@ const espera=(titulo,txt)=>`<div class="pn-wait"><b>${esc(titulo)}</b><span>${es
 let painelAtual=null;
 function critHTML(D,C,temCrit,portais){
   return temCrit?`<div class="pn-crit-legend">${legenda(C.opcoes)}</div><div class="pn-bars">${portais.map(p=>`<div class="pn-srow" data-pp="${p}">${linkPortal(p)}${pilha(D.crit[C.id][p]||[0,0,0],C.opcoes,portalNome(p))}</div>`).join("")}</div>`
-    :espera("Aparece quando a classificação terminar","Este quadro compara o tipo de conteúdo, o tom das manchetes, a profundidade e a postura de cada portal.");
+    :espera("Aparece quando a classificação terminar","Este quadro compara o tipo de conteúdo, o tom das manchetes, a profundidade, a postura e o viés político de cada portal.");
 }
 /* troca de critério: o botão desliza, a legenda troca e as barras crescem/encolhem até os novos valores */
 function trocaCriterio(id){
@@ -2036,10 +2251,10 @@ function trocaCriterio(id){
 }
 function viewPainel(){
   return `
-  <section class="ph-head fxbg" id="painel-head" data-tone="light"><canvas class="halftone" aria-hidden="true"></canvas><div class="wrap">
+  <section class="ph-head fxbg" id="painel-head" data-tone="light"><canvas class="halftone" aria-hidden="true"></canvas><div class="wrap pn-wide">
     <h1 class="D" data-r>Painel</h1>
   </div></section>
-  <section class="s" data-tone="light" style="padding-top:0"><div class="wrap">
+  <section class="s" data-tone="light" style="padding-top:0"><div class="wrap pn-wide">
     <div class="pn-top" data-r><p>O que está acontecendo agora, direto nos números: os assuntos que dominam, quem publica mais sobre cada um e como cada portal escreve.</p>
       <div class="seg" id="perseg" role="group" aria-label="Período">${PERIODOS.map(p=>`<button type="button" data-per="${p.id}" aria-pressed="${p.id===perP}">${p.nome}</button>`).join("")}</div></div>
     <div class="pn-body" id="pn-body"></div>
@@ -2093,10 +2308,10 @@ function renderPainel(){
   // como cada portal escreve
   const C=CRITERIOS.find(c=>c.id===critPn)||CRITERIOS[0], temCrit=Object.keys(D.crit[C.id]).length>0;
   const cardCrit=`<div class="pn-card"><h2>Como cada portal escreve</h2><p class="pn-sub">Distribuição das notícias de cada portal no critério escolhido. Só entram classificações com confiança acima de ${Math.round(CONFIG.confiancaMinima*100)}%.</p>
-    <div class="seg" id="pnseg" role="group" aria-label="Critério" style="margin-bottom:18px">${CRITERIOS.filter(c=>c.id!=="vies").map(c=>`<button type="button" data-pnc="${c.id}" aria-pressed="${c.id===C.id}">${esc(c.nome)}</button>`).join("")}</div>
+    <div class="seg" id="pnseg" role="group" aria-label="Critério" style="margin-bottom:18px">${CRITERIOS.map(c=>`<button type="button" data-pnc="${c.id}" aria-pressed="${c.id===C.id}">${esc(c.nome)}</button>`).join("")}</div>
     <div id="pn-crit">${critHTML(D,C,temCrit,portais)}</div></div>`;
   painelAtual=D;
-  box.innerHTML=kpis+cardTemas+cardHeat+cardPrim+cardCob+cardVies+cardCrit;
+  box.innerHTML=kpis+cardTemas+cardHeat+cardPrim+cardCob+cardCrit;
   box.style.animation="none";box.offsetWidth;box.style.animation="";
   try{initSegs()}catch(e){}
 }
@@ -2122,7 +2337,8 @@ async function route(){
   if(h==="temas"){html=await viewTemas();after=afterTemas;tab="temas"}
   else if(h.startsWith("tema-")){html=await viewTema(h.slice(5));after=()=>{try{halftone($("#fx-head"))}catch(e){}};tab="temas"}
   else if(h.startsWith("sub-")){html=await viewSub(h.slice(4));after=afterSub;tab="temas"}
-  else if(h==="portais"||h==="divergencias"){html=await viewPortais();after=afterPortais;tab="portais"}
+  else if(h==="portais"){html=await viewPortais();after=afterPortais;tab="portais"}
+  else if(h==="divergencias"){html=viewCasosDiv();after=()=>{try{halftone($("#casosdiv-head"))}catch(e){}};tab="portais"}
   else if(h==="fora"){html=await viewFora();after=()=>{try{halftone($("#fora-head"))}catch(e){}};tab="portais"}
   else if(h==="painel"){html=viewPainel();after=afterPainel;tab="painel"}
   else if(h==="metodologia"){html=viewMetodologia();after=afterMetodologia;tab="metodologia"}

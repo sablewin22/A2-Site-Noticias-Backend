@@ -23,7 +23,7 @@ import os
 import re
 import sqlite3
 import zipfile
-from collections import Counter
+from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 
 BRASILIA = timezone(timedelta(hours=-3))
@@ -105,6 +105,175 @@ def para_brasilia(iso: str | None) -> datetime | None:
     if d.tzinfo is None:
         d = d.replace(tzinfo=timezone.utc)
     return d.astimezone(BRASILIA)
+
+
+def calcular_divergencias(con, min_portais=3):
+    sql = """
+        SELECT 
+            g.id AS grupo_id,
+            g.titulo AS grupo_titulo,
+            substr(n.publicado_em, 1, 10) as data_dia,
+            strftime('%Y-%W', n.publicado_em) as semana,
+            COALESCE(gt.tema, c.tema, 'geral') AS tema,
+            g.n_portais,
+            n.id AS noticia_id,
+            n.portal,
+            n.titulo,
+            n.link,
+            c.tipo,
+            c.tom_manchete,
+            c.profundidade,
+            c.postura,
+            c.vies_politico
+        FROM grupos g
+        LEFT JOIN grupo_tema gt ON gt.grupo_id = g.id
+        JOIN noticia_grupo ng ON ng.grupo_id = g.id
+        JOIN noticias n ON n.id = ng.noticia_id
+        JOIN classificacoes c ON c.noticia_id = n.id
+        WHERE g.n_portais >= ? AND c.erro IS NULL
+        ORDER BY n.publicado_em ASC
+    """
+    linhas = con.execute(sql, (min_portais,)).fetchall()
+    grupos = defaultdict(list)
+    for l in linhas:
+        grupos[l[0]].append({
+            "grupo_id": l[0], "grupo_titulo": l[1], "data_dia": l[2], "semana": l[3],
+            "tema": l[4], "n_portais": l[5], "noticia_id": l[6], "portal": l[7],
+            "titulo": l[8], "link": l[9], "tipo": l[10], "tom_manchete": l[11],
+            "profundidade": l[12], "postura": l[13], "vies_politico": l[14]
+        })
+
+    semanal = defaultdict(lambda: {"total": 0, "outliers_tom": 0, "por_portal": Counter()})
+    outliers_tom = []
+    outliers_postura = []
+
+    for gid, nots in grupos.items():
+        por_portal = {}
+        for n in nots:
+            if n["portal"] not in por_portal:
+                por_portal[n["portal"]] = n
+        nots_unicas = list(por_portal.values())
+        if len(nots_unicas) < min_portais:
+            continue
+
+        dia = nots_unicas[0]["data_dia"] or "2026-11-01"
+        sem = nots_unicas[0]["semana"] or "2026-44"
+        semanal[sem]["total"] += 1
+
+        # Tom da Manchete
+        toms = [n["tom_manchete"] for n in nots_unicas if n.get("tom_manchete")]
+        if len(toms) >= min_portais:
+            cont_tom = Counter(toms)
+            mais_comum, qtd_mc = cont_tom.most_common(1)[0]
+            if qtd_mc >= 2 and len(cont_tom) > 1:
+                for n in nots_unicas:
+                    if n["tom_manchete"] and n["tom_manchete"] != mais_comum and cont_tom[n["tom_manchete"]] == 1:
+                        semanal[sem]["outliers_tom"] += 1
+                        semanal[sem]["por_portal"][n["portal"]] += 1
+                        outliers_tom.append({
+                            "grupo_id": gid,
+                            "grupo_titulo": n["grupo_titulo"],
+                            "data": dia,
+                            "semana": sem,
+                            "tema": n["tema"],
+                            "portal_outlier": n["portal"],
+                            "tom_outlier": n["tom_manchete"],
+                            "titulo_outlier": n["titulo"],
+                            "tom_consenso": mais_comum,
+                            "qtd_consenso": qtd_mc,
+                            "total_portais": len(toms),
+                            "outros_titulos": [
+                                {"portal": o["portal"], "titulo": o["titulo"], "tom": o["tom_manchete"]}
+                                for o in nots_unicas if o["portal"] != n["portal"]
+                            ]
+                        })
+
+        # Postura
+        posturas = [n["postura"] for n in nots_unicas if n.get("postura")]
+        if len(posturas) >= min_portais:
+            cont_pos = Counter(posturas)
+            mais_comum, qtd_mc = cont_pos.most_common(1)[0]
+            if qtd_mc >= 2 and len(cont_pos) > 1:
+                for n in nots_unicas:
+                    if n["postura"] and n["postura"] != mais_comum and cont_pos[n["postura"]] == 1:
+                        outliers_postura.append({
+                            "grupo_id": gid,
+                            "grupo_titulo": n["grupo_titulo"],
+                            "data": dia,
+                            "tema": n["tema"],
+                            "portal_outlier": n["portal"],
+                            "postura_outlier": n["postura"],
+                            "titulo_outlier": n["titulo"],
+                            "postura_consenso": mais_comum,
+                            "qtd_consenso": qtd_mc,
+                            "total_portais": len(posturas),
+                            "outros_titulos": [
+                                {"portal": o["portal"], "titulo": o["titulo"], "postura": o["postura"]}
+                                for o in nots_unicas if o["portal"] != n["portal"]
+                            ]
+                        })
+
+    ranking_tom = Counter(o["portal_outlier"] for o in outliers_tom)
+    ranking_postura = Counter(o["portal_outlier"] for o in outliers_postura)
+    portais_ordem = ["Metrópoles", "G1", "CNN Brasil", "Agência Brasil", "Poder360"]
+    ranking = []
+    for p in portais_ordem:
+        qtd_t = ranking_tom.get(p, 0)
+        qtd_p = ranking_postura.get(p, 0)
+        pct_t = round((qtd_t / len(outliers_tom) * 100), 1) if outliers_tom else 0
+        ranking.append({
+            "portal": p,
+            "outliers_tom": qtd_t,
+            "pct_tom": pct_t,
+            "outliers_postura": qtd_p
+        })
+
+    DATAS_SEMANAS = {
+        "2026-31": "03 a 09 de ago",
+        "2026-32": "10 a 16 de ago",
+        "2026-33": "17 a 23 de ago",
+        "2026-34": "24 a 30 de ago",
+        "2026-35": "31 de ago a 06 de set",
+        "2026-36": "07 a 13 de set",
+        "2026-37": "14 a 20 de set",
+        "2026-38": "21 a 27 de set",
+        "2026-39": "28 de set a 04 de out",
+        "2026-40": "05 a 11 de out",
+        "2026-41": "12 a 18 de out",
+        "2026-42": "19 a 25 de out",
+        "2026-43": "26 de out a 01 de nov",
+        "2026-44": "02 a 08 de nov",
+        "2026-45": "09 e 10 de nov"
+    }
+
+    serie_temporal = []
+    for sem in sorted(semanal.keys()):
+        d = semanal[sem]
+        tot = d["total"]
+        outl = d["outliers_tom"]
+        taxa = round((outl / tot * 100), 1) if tot else 0.0
+        rotulo_legivel = DATAS_SEMANAS.get(sem, sem)
+        serie_temporal.append({
+            "semana": sem,
+            "rotulo": rotulo_legivel,
+            "total_eventos": tot,
+            "outliers": outl,
+            "taxa": taxa,
+            "por_portal": dict(d["por_portal"])
+        })
+
+    outliers_tom.sort(key=lambda x: x["data"], reverse=True)
+    outliers_postura.sort(key=lambda x: x["data"], reverse=True)
+
+    return {
+        "total_eventos_analisados": len(grupos),
+        "total_outliers_tom": len(outliers_tom),
+        "taxa_geral_tom": round(len(outliers_tom) / len(grupos) * 100, 1) if grupos else 0,
+        "total_outliers_postura": len(outliers_postura),
+        "ranking_portais": ranking,
+        "serie_temporal": serie_temporal,
+        "casos_destaque": outliers_tom[:35]
+    }
 
 
 def main():
@@ -221,6 +390,7 @@ def main():
         "portais": list(PORTAIS.values()),
         "subtemas": subtemas,
         "noticias": noticias,
+        "divergencias": calcular_divergencias(con, args.min_portais),
     }
     os.makedirs(os.path.dirname(args.saida) or ".", exist_ok=True)
     with open(args.saida, "w", encoding="utf-8") as f:

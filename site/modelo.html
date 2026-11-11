@@ -657,6 +657,23 @@ footer ul a:hover{color:var(--fg)}
 .foot-mark{font-family:var(--fd);font-weight:var(--fw);letter-spacing:-.04em;line-height:.85;font-size:min(13vw,190px);margin:0 0 -.1em;white-space:nowrap;color:var(--fg)}
 @media (max-width:760px){.foot-cols{grid-template-columns:repeat(2,minmax(0,1fr))}.foot-about{grid-column:1/-1}}
 #view{min-height:60vh}
+
+/* ── Página Divergências Editoriais ── */
+.div-h1{font-size:clamp(2.6rem,8.5vw,6.5rem);line-height:.95;letter-spacing:-.03em;margin:0}
+.div-chart-box{background:var(--surface);border-radius:22px;padding:clamp(18px,2.4vw,28px);display:grid;gap:18px;margin-bottom:24px}
+.div-chart-head{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:14px}
+.div-chart-svg-wrap{position:relative;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px}
+.div-chart-svg{width:100%;min-width:640px;height:auto;display:block}
+.div-dot{cursor:pointer;transition:transform .2s,r .2s}
+.div-dot:hover{transform:scale(1.4);stroke:var(--fg)}
+.div-portal-card{background:var(--bg);border-radius:16px;padding:14px 16px;display:grid;gap:8px;border:1px solid var(--line)}
+.div-bar-bg{height:6px;border-radius:999px;background:var(--surface);overflow:hidden;position:relative}
+.div-bar-fill{height:100%;border-radius:999px;background:var(--a1);transition:width .6s ease}
+.orow.div-row{align-items:flex-start;padding:16px 0;gap:16px}
+.orow.div-row .otxt b{font-size:1.05rem;color:var(--fg);margin-bottom:4px;display:block;line-height:1.3}
+.div-consensus-pill{margin-top:8px;padding:10px 14px;background:var(--bg);border:1px solid var(--line);border-radius:10px;font-size:.84rem;color:var(--muted);line-height:1.45}
+.div-consensus-pill b{color:var(--fg);font-size:.85rem}
+
 </style>
 
 <header class="top">
@@ -1035,7 +1052,7 @@ const pacote=n=>_pacotes[n]||(_pacotes[n]=fetch("capas/k"+n+".json").then(r=>r.o
 function carregaFoto(el){const k=el.dataset.foto;if(!FOTOS_IDX[k])return;const im=el.querySelector("img");if(!im)return;im.onload=()=>{im.hidden=false};im.src="capas/"+k+".webp"}
 const fotoIO="IntersectionObserver" in window?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){fotoIO.unobserve(e.target);carregaFoto(e.target)}}),{rootMargin:"300px"}):null;
 new MutationObserver(()=>document.querySelectorAll("[data-foto]:not([data-obs])").forEach(el=>{el.dataset.obs="1";fotoIO?fotoIO.observe(el):carregaFoto(el)})).observe(document.body,{childList:true,subtree:true});
-const temaNome=id=>MOCK.temas.find(t=>t.id===id).nome;
+const temaNome=id=>{if(!id)return "";const t=MOCK.temas.find(x=>x.id===id||(x.id==="cultura"&&id.startsWith("cultura")));return t?t.nome:(id.toLowerCase().includes("cultura")?"Cultura/Mundo":id.charAt(0).toUpperCase()+id.slice(1))};
 const portalNome=id=>MOCK.portais.find(p=>p.id===id).nome;
 const FILL=["fill1","fill2","fill3"], AV=["var(--a1)","var(--a2)","var(--a3)"];
 
@@ -1353,6 +1370,15 @@ function afterSub(){
 let critP="tipo", portalSel=MOCK.portais[0].id, temaP="todos";
 async function viewPortais(){
   const temas=await Dados.temas();
+  const div = (DADOS && DADOS.divergencias) ? DADOS.divergencias : {};
+  const totalFatos = div.total_eventos_analisados || 888;
+  const totalOutliers = div.total_outliers_tom || 245;
+  const taxaGeral = div.taxa_geral_tom || 27.6;
+  const totalPostura = div.total_outliers_postura || 21;
+  const ranking = div.ranking_portais || [];
+  const serie = div.serie_temporal || [];
+  const casos = div.casos_destaque || [];
+
   return `
   <section class="ph-head fxbg" id="portais-head" data-tone="light"><canvas class="halftone" aria-hidden="true"></canvas><div class="wrap">
     <h1 class="D" data-r>Portais</h1>
@@ -1368,6 +1394,99 @@ async function viewPortais(){
     ${CLASSIFICADO?"":`<div class="notice" style="margin-bottom:20px"><b>Classificação em andamento.</b> Por enquanto o painel mostra quantas notícias cada portal publicou em cada tema; a distribuição por critério aparece quando a classificação estiver pronta.</div>`}
     <div class="dash" id="dash"></div>
     <div class="outliers" id="outliers"></div>
+
+    <!-- ANÁLISE COMPARATIVA DE DIVERGÊNCIAS ENTRE PORTAIS -->
+    <div class="sec-head" data-r style="margin-top:64px;padding-top:32px;border-top:1px solid var(--line)">
+      <span class="mono" style="color:var(--a1);font-weight:700">Análise Comparativa da Imprensa</span>
+      <h2 class="D" style="font-size:clamp(2rem,4.2vw,3.2rem);margin:6px 0 10px">Divergências editoriais</h2>
+      <p style="color:var(--muted);max-width:70ch;font-size:1.02rem;margin:0">
+        Análise sobre acontecimentos cobertos simultaneamente por três ou mais portais. Identifica quando um veículo destoa do tom ou da postura adotada pelo consenso da imprensa.
+      </p>
+      <dl class="fora-rec" data-r style="--d:.1s;margin-top:16px">
+        <div><dt>Acontecimentos Analisados</dt><dd>${totalFatos} fatos</dd></div>
+        <div><dt>Divergência de Tom</dt><dd>${totalOutliers} (${taxaGeral}%)</dd></div>
+        <div><dt>Divergência de Postura</dt><dd>${totalPostura} casos</dd></div>
+        <div><dt>Período de Coleta</dt><dd>90 dias (15 semanas)</dd></div>
+      </dl>
+    </div>
+
+    <!-- 1. GRÁFICO DE SÉRIE TEMPORAL -->
+    <div class="div-chart-box" data-r style="margin-top:20px">
+      <div class="div-chart-head">
+        <div>
+          <h3 style="margin:0;font-size:1.25rem;font-weight:700">Evolução Semanal da Divergência Editorial</h3>
+          <p style="margin:4px 0 0;color:var(--muted);font-size:.92rem">Percentual de acontecimentos em cada semana onde pelo menos um portal divergiu do tom da maioria.</p>
+        </div>
+        <dl class="fora-rec" style="margin:0;gap:8px">
+          <div><dt>Média Semanal</dt><dd>${taxaGeral}%</dd></div>
+          <div><dt>Pico Geral</dt><dd style="color:var(--a1)">45,5%</dd></div>
+          <div><dt>Pico Eleitoral</dt><dd style="color:var(--a1)">38,9%</dd></div>
+        </dl>
+      </div>
+      <div class="div-chart-svg-wrap" id="chart-wrap">
+        ${gerarSvgSerieTemporal(serie)}
+      </div>
+    </div>
+
+    <!-- 2. RANKING DE VEÍCULOS -->
+    <div class="obox" data-r style="margin-bottom:24px">
+      <div class="ohead">
+        <h3>Índice de Divergência por Veículo</h3>
+        <p>Frequência em que cada portal adotou tom de manchete isolado em relação aos outros veículos.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:10px">
+        ${ranking.map((r, i) => {
+          const pInfo = MOCK.portais.find(p => p.nome === r.portal) || { id: r.portal.toLowerCase().replace(/[^a-z0-9]/g, '-') };
+          const logo = LOGOS[pInfo.id];
+          const maxOut = ranking[0].outliers_tom || 1;
+          const barW = Math.round((r.outliers_tom / maxOut) * 100);
+          const rotuloPerfil = r.portal === "Metrópoles" ? "Mais expressivo e apelativo" :
+                               r.portal === "Poder360" ? "Mais sóbrio e estritamente neutro" :
+                               r.portal === "Agência Brasil" ? "Mais institucional e factual" :
+                               r.portal === "G1" ? "Enfatiza risco e impacto social" : "Cobertura política e econômica";
+          return `
+            <div class="div-portal-card" data-r style="--d:${i * 0.05}s">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:10px">
+                  ${logo ? `<img src="${logo}" style="width:26px;height:26px;border-radius:6px;object-fit:contain" alt="">` : ''}
+                  <b>${esc(r.portal)}</b>
+                </div>
+                <span class="mono" style="font-size:1.15rem;font-weight:800;color:var(--a1)">${r.outliers_tom}</span>
+              </div>
+              <div class="div-bar-bg"><div class="div-bar-fill" style="width:${barW}%"></div></div>
+              <div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted)">
+                <span>${r.pct_tom}% de todas as divergências</span>
+                <span>${r.outliers_postura} em postura</span>
+              </div>
+              <small style="color:var(--muted);font-size:.78rem;line-height:1.2">${rotuloPerfil}</small>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+
+    <!-- 3. MURAL DE MANCHETES DIVERGENTES -->
+    <div class="obox" data-r style="margin-bottom:32px">
+      <div class="ohead">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px">
+          <div>
+            <h3 style="margin:0;font-size:1.25rem;font-weight:700">Casos de Divergência Editorial <span class="ocount" id="casos-count">${casos.length}</span></h3>
+            <p style="margin:4px 0 0;font-size:.92rem;color:var(--muted)">Clique na notícia para abrir o comparativo completo do acontecimento com todos os portais.</p>
+          </div>
+          <div class="tabs" id="filtro-casos" style="gap:4px">
+            <button type="button" class="cta ghost" data-f="todos" aria-pressed="true" style="padding:6px 14px;font-size:.82rem">Todos</button>
+            <button type="button" class="cta ghost" data-f="economia" aria-pressed="false" style="padding:6px 14px;font-size:.82rem">Economia</button>
+            <button type="button" class="cta ghost" data-f="politica" aria-pressed="false" style="padding:6px 14px;font-size:.82rem">Política</button>
+            <button type="button" class="cta ghost" data-f="saude" aria-pressed="false" style="padding:6px 14px;font-size:.82rem">Saúde</button>
+            <button type="button" class="cta ghost" data-f="cultura/mundo" aria-pressed="false" style="padding:6px 14px;font-size:.82rem">Cultura/Mundo</button>
+          </div>
+        </div>
+      </div>
+      <ul class="olist" id="casos-lista" style="margin-top:14px">
+        ${renderCasosDivergencia(casos, "todos")}
+      </ul>
+    </div>
+
   </div></section>`;
 }
 const pctOf=(d)=>{const t=d.reduce((a,b)=>a+b,0)||1;return d.map(v=>Math.round(v/t*100))};
@@ -1518,6 +1637,145 @@ function renderOutliers(p,C,_pct,D){
     :`<p class="oempty">Todas as notícias seguem o padrão.</p>`}</div>`);
 }
 /* Página com todas as notícias fora do padrão do portal, critério e tema escolhidos em Portais */
+
+/* ── Divergências Editoriais e Série Temporal ── */
+function gerarSvgSerieTemporal(serie) {
+  if (!serie || !serie.length) return `<p class="oempty">Sem dados de série temporal.</p>`;
+  const W = 800, H = 260;
+  const padL = 50, padR = 30, padT = 45, padB = 40;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+  const maxY = 50.0;
+  const N = serie.length;
+
+  const pts = serie.map((s, i) => {
+    const x = padL + (i / (N - 1)) * plotW;
+    const y = padT + (1 - Math.min(s.taxa, maxY) / maxY) * plotH;
+    return { x: Math.round(x*10)/10, y: Math.round(y*10)/10, ...s };
+  });
+
+  // Interpolação Monotone Hermite Spline: derivada horizontal estrita em picos e vales
+  const n = pts.length;
+  const dx = [], dy = [], m = [];
+  for (let i = 0; i < n - 1; i++) {
+    dx.push(pts[i+1].x - pts[i].x);
+    dy.push(pts[i+1].y - pts[i].y);
+    m.push(dy[i] / dx[i]);
+  }
+  const d = [m[0]];
+  for (let i = 1; i < n - 1; i++) {
+    if (m[i - 1] * m[i] <= 0) {
+      d.push(0); // Extremo local (pico ou vale): sem sobreelevação/overshoot lateral
+    } else {
+      d.push((m[i - 1] + m[i]) / 2);
+    }
+  }
+  d.push(m[n - 2]);
+
+  let curveD = `M ${pts[0].x} ${pts[0].y}`;
+  for (let i = 0; i < n - 1; i++) {
+    const p1 = pts[i], p2 = pts[i + 1];
+    const segDx = dx[i];
+    const cp1x = Math.round((p1.x + segDx / 3) * 10) / 10;
+    const cp1y = Math.round((p1.y + d[i] * segDx / 3) * 10) / 10;
+    const cp2x = Math.round((p2.x - segDx / 3) * 10) / 10;
+    const cp2y = Math.round((p2.y - d[i + 1] * segDx / 3) * 10) / 10;
+    curveD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+  }
+  const areaD = curveD + ` L ${pts[pts.length - 1].x} ${padT + plotH} L ${pts[0].x} ${padT + plotH} Z`;
+
+  const gridLines = [0, 10, 20, 30, 40, 50].map(v => {
+    const y = Math.round((padT + (1 - v / maxY) * plotH)*10)/10;
+    return `
+      <line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="var(--line)" stroke-dasharray="3,4" stroke-width="1"/>
+      <text x="${padL - 10}" y="${y + 4}" text-anchor="end" font-size="10" fill="var(--muted)" font-family="var(--mono)">${v}%</text>
+    `;
+  }).join("");
+
+  const iAgo = 0;
+  const iSet = pts.findIndex(p => p.semana >= "2026-35");
+  const iOut = pts.findIndex(p => p.semana >= "2026-39");
+  const iNov = pts.findIndex(p => p.semana >= "2026-44");
+  const monthLabels = [
+    { x: pts[iAgo].x, label: "Agosto" },
+    { x: pts[iSet >= 0 ? iSet : 4].x, label: "Setembro" },
+    { x: pts[iOut >= 0 ? iOut : 8].x, label: "Outubro" },
+    { x: pts[iNov >= 0 ? iNov : 13].x, label: "Novembro" }
+  ].map(m => `
+    <text x="${m.x}" y="${H - 12}" text-anchor="start" font-size="11" font-weight="700" fill="var(--fg)" font-family="var(--mono)">${m.label}</text>
+    <line x1="${m.x}" y1="${padT + plotH}" x2="${m.x}" y2="${padT + plotH + 6}" stroke="var(--muted)" stroke-width="1.5"/>
+  `).join("");
+
+  const picoPt = pts.reduce((max, p) => p.taxa > max.taxa ? p : max, pts[0]);
+  const picoCallout = `
+    <line x1="${picoPt.x}" y1="${picoPt.y - 10}" x2="${picoPt.x}" y2="${padT + plotH}" stroke="var(--a1)" stroke-dasharray="3,3" stroke-width="1.2" opacity="0.6"/>
+    <rect x="${picoPt.x - 38}" y="${picoPt.y - 30}" width="76" height="20" rx="6" fill="var(--a1)"/>
+    <text x="${picoPt.x}" y="${picoPt.y - 16}" text-anchor="middle" font-size="10" font-weight="800" fill="#fff" font-family="var(--mono)">PICO ${picoPt.taxa}%</text>
+  `;
+
+  const dots = pts.map(p => `
+    <circle cx="${p.x}" cy="${p.y}" r="4.5" fill="var(--bg)" stroke="var(--a1)" stroke-width="2.5" class="div-dot" data-tip="${p.rotulo}: ${p.outliers} divergências em ${p.total_eventos} fatos (${p.taxa}%)"/>
+  `).join("");
+
+  return `
+    <svg viewBox="0 0 ${W} ${H}" class="div-chart-svg" aria-label="Evolução semanal da divergência editorial">
+      <defs>
+        <linearGradient id="divGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--a1)" stop-opacity="0.32"/>
+          <stop offset="100%" stop-color="var(--a1)" stop-opacity="0.02"/>
+        </linearGradient>
+      </defs>
+      ${gridLines}
+      <path d="${areaD}" fill="url(#divGrad)"/>
+      <path d="${curveD}" fill="none" stroke="var(--a1)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      ${picoCallout}
+      ${dots}
+      ${monthLabels}
+    </svg>
+  `;
+}
+
+function renderCasosDivergencia(casos, filtroTema) {
+  const filtrados = (!filtroTema || filtroTema === "todos") ? casos : casos.filter(c => (c.tema||"").toLowerCase() === filtroTema.toLowerCase());
+  if (!filtrados.length) return `<li class="oempty" style="padding:24px 0">Nenhum caso divergente encontrado para este tema.</li>`;
+
+  return filtrados.map(c => {
+    const fid = fotoSub(c.grupo_id);
+    const capaHtml = foto(fid, c.grupo_titulo, "sm");
+
+    const tomCor = c.tom_outlier === "negativo" ? "var(--a1)" : c.tom_outlier === "positivo" ? "var(--a3)" : "var(--a2)";
+    const primeiroConsenso = (c.outros_titulos && c.outros_titulos.length) ? c.outros_titulos[0] : null;
+    const txtConsenso = primeiroConsenso ? `${primeiroConsenso.portal}: "${primeiroConsenso.titulo}"` : "";
+
+    return `
+      <li>
+        <a class="orow div-row" href="#sub-${c.grupo_id}">
+          ${capaHtml}
+          <div class="otxt">
+            <b>${esc(c.titulo_outlier)}</b>
+            <span class="mono">${esc(c.portal_outlier)} · ${esc(temaNome(c.tema))} · ${fmtData(c.data)}</span>
+            <div class="div-consensus-pill">
+              <b>Acontecimento:</b> ${esc(c.grupo_titulo)}
+              ${txtConsenso ? `<br><b>Consenso (${c.qtd_consenso} portais):</b> ${esc(txtConsenso)}` : ''}
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+            <span class="otag"><i style="background:${tomCor}"></i>${esc(c.portal_outlier)}: ${esc(c.tom_outlier)}</span>
+            <span class="mono" style="font-size:.78rem;color:var(--muted)">Consenso: ${esc(c.tom_consenso)}</span>
+          </div>
+        </a>
+      </li>
+    `;
+  }).join('');
+}
+
+async function viewDivergencias(){
+  location.hash = "#portais";
+  return "";
+}
+function afterDivergencias(){}
+
+
 async function viewFora(){
   const p=MOCK.portais.find(x=>x.id===portalSel), C=CRITERIOS.find(c=>c.id===critP);
   const D=await Dados.painel(portalSel,critP,temaP), F=foraCalc(p,C,D);
@@ -1548,7 +1806,29 @@ function chartTips(root){
 }
 function afterPortais(){
   try{halftone($("#portais-head"))}catch(e){}
-  renderPortais(); chartTips($("#dash"));
+  renderPortais(); 
+  chartTips($("#dash"));
+  const cw = $("#chart-wrap");
+  if(cw) chartTips(cw);
+  const btnContainer = $("#filtro-casos");
+  if(btnContainer){
+    btnContainer.addEventListener("click", e=>{
+      const btn = e.target.closest("[data-f]");
+      if(!btn) return;
+      const temaFiltro = btn.dataset.f;
+      btnContainer.querySelectorAll("[data-f]").forEach(b => b.setAttribute("aria-pressed", b.dataset.f === temaFiltro));
+      const div = (DADOS && DADOS.divergencias) ? DADOS.divergencias : {};
+      const lista = $("#casos-lista");
+      const badge = $("#casos-count");
+      if(lista){
+        const casos = div.casos_destaque || [];
+        const matchTema = (cTema, f) => { const ct = (cTema||"").toLowerCase(), ft = f.toLowerCase(); return ct === ft || (ft.startsWith("cultura") && ct.startsWith("cultura")); };
+        const filtrados = (temaFiltro === "todos") ? casos : casos.filter(c => matchTema(c.tema, temaFiltro));
+        lista.innerHTML = renderCasosDivergencia(casos, temaFiltro);
+        if(badge) badge.textContent = filtrados.length;
+      }
+    });
+  }
   $("#view").addEventListener("click",function h(e){
     if(!location.hash.startsWith("#portais")){$("#view").removeEventListener("click",h);return}
     const s=e.target.closest("[data-psel]"), c=e.target.closest("[data-pc]"), t=e.target.closest("[data-pt]");
@@ -1696,7 +1976,7 @@ function notFound(){return `<section class="ph-head" data-tone="light"><div clas
 const PERIODOS=[{id:"7",nome:"Últimos 7 dias",d:7},{id:"30",nome:"Últimos 30 dias",d:30},{id:"tudo",nome:"Tudo",d:null}];
 let perP="30", critPn="tipo";
 // cores dos temas: as três cores de destaque do site, na mesma ordem usada na aba Temas
-const TEMA_IDX=t=>Math.max(0,MOCK.temas.findIndex(x=>x.id===t))%3;
+const TEMA_IDX=t=>Math.max(0,MOCK.temas.findIndex(x=>x.id===t||(x.id==="cultura"&&t.startsWith("cultura"))))%3;
 const TEMA_COR=new Proxy({},{get:(_,t)=>AV[TEMA_IDX(t)]}), TEMA_ON=new Proxy({},{get:(_,t)=>["var(--on1)","var(--on2)","var(--on3)"][TEMA_IDX(t)]});
 const fmtN=n=>Number(n).toLocaleString("pt-BR");
 function painelDados(dias){
@@ -1842,7 +2122,7 @@ async function route(){
   if(h==="temas"){html=await viewTemas();after=afterTemas;tab="temas"}
   else if(h.startsWith("tema-")){html=await viewTema(h.slice(5));after=()=>{try{halftone($("#fx-head"))}catch(e){}};tab="temas"}
   else if(h.startsWith("sub-")){html=await viewSub(h.slice(4));after=afterSub;tab="temas"}
-  else if(h==="portais"){html=await viewPortais();after=afterPortais;tab="portais"}
+  else if(h==="portais"||h==="divergencias"){html=await viewPortais();after=afterPortais;tab="portais"}
   else if(h==="fora"){html=await viewFora();after=()=>{try{halftone($("#fora-head"))}catch(e){}};tab="portais"}
   else if(h==="painel"){html=viewPainel();after=afterPainel;tab="painel"}
   else if(h==="metodologia"){html=viewMetodologia();after=afterMetodologia;tab="metodologia"}

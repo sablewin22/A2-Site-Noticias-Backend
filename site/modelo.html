@@ -764,7 +764,7 @@ const MOCK = {
     {id:"meio-ambiente", nome:"Meio ambiente", art:["y","c"]},
     {id:"saude", nome:"Saúde", art:["m","y"]},
     {id:"educacao", nome:"Educação", art:["y","c"]},
-    {id:"cultura", nome:"Cultura", art:["m","c"]},
+    {id:"cultura", nome:"Cultura/Mundo", art:["m","c"]},
     {id:"esporte", nome:"Esporte", art:["y","m"]}
   ],
   subtemas: [
@@ -1564,7 +1564,7 @@ function afterPortais(){
 const PASSOS=[
   {t:"Coletamos",
    d:"Buscamos as notícias de cinco portais no Google Notícias: G1, CNN Brasil, Metrópoles, Poder360 e Agência Brasil. As buscas são feitas por portal, por dia e por tema. De cada notícia guardamos título, portal, data e link.",
-   i:["Acompanhamos sete temas: política, economia, saúde, educação, meio ambiente, esporte e cultura.","A base é uma amostra ampla do que cada portal publicou, não a cobertura completa."]},
+   i:["Acompanhamos sete temas: política, economia, saúde, educação, meio ambiente, esporte e cultura/mundo.","A base é uma amostra ampla do que cada portal publicou, não a cobertura completa."]},
   {t:"Agrupamos",
    d:"Um modelo de linguagem treinado em português transforma cada título em um vetor que representa o seu significado. Títulos de portais diferentes com significado muito parecido, publicados em até 48 horas, formam um mesmo acontecimento.",
    i:["Não agrupamos por palavra-chave: \u201cjuros\u201d ou \u201cinflação\u201d aparecem em dezenas de fatos diferentes.","Só aparecem no site os acontecimentos cobertos por três ou mais portais."]},

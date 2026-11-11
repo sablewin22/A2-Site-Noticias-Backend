@@ -40,6 +40,7 @@ TEMAS_SITE = {
     "politica": "politica", "economia": "economia", "saude": "saude", "educacao": "educacao",
     "meio_ambiente": "meio-ambiente", "esporte": "esporte",
     "cultura": "cultura",
+    "cultura/mundo": "cultura",
     "entretenimento": "entretenimento",
 }
 ORDEM_TEMAS = list(TEMAS_SITE)  # desempate

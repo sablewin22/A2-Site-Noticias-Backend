@@ -103,6 +103,21 @@ TERMOS = {
         "emmy", "bienal", "artista", "arte", "dança", "danca", "streaming", "netflix", "globoplay",
         "reality", "bbb", "celebridade", "famos", "influenciador", "youtuber", "morre aos",
         "morre o", "morre a", "estreia", "documentario", "patrimonio", "halloween",
+        "internacional", "exterior", "mundo", "europa", "eua", "estados unidos", "espanha",
+        "franca", "argentina", "asia", "oriente medio", "atentado", "bomba", "explosao",
+        "acidente aereo", "acidente de trem", "ferroviari", "aeroporto", "diplomacia", "geopolitica",
+    ],
+    "cultura/mundo": [
+        "cultura", "cultural", "cinema", "filme", "serie", "novela", "ator", "atriz", "cantor",
+        "cantora", "musica", "album", "show", "turne", "festival", "rock in rio", "lollapalooza",
+        "carnaval", "escola de samba", "rainha de bateria", "desfile", "museu", "exposicao",
+        "teatro", "peca", "livro", "escritor", "literatura", "premio jabuti", "oscar", "grammy",
+        "emmy", "bienal", "artista", "arte", "dança", "danca", "streaming", "netflix", "globoplay",
+        "reality", "bbb", "celebridade", "famos", "influenciador", "youtuber", "morre aos",
+        "morre o", "morre a", "estreia", "documentario", "patrimonio", "halloween",
+        "internacional", "exterior", "mundo", "europa", "eua", "estados unidos", "espanha",
+        "franca", "argentina", "asia", "oriente medio", "atentado", "bomba", "explosao",
+        "acidente aereo", "acidente de trem", "ferroviari", "aeroporto", "diplomacia", "geopolitica",
     ],
 }
 

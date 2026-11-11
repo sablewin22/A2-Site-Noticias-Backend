@@ -68,7 +68,8 @@ TEMAS = {
     "meio_ambiente": "(ambiente OR clima OR desmatamento OR Amazônia OR queimadas OR poluição OR enchente OR seca)",
     "educacao": "(educação OR escola OR universidade OR Enem OR professores OR alunos OR ensino OR MEC)",
     "politica": "(governo OR Congresso OR Senado OR Câmara OR STF OR ministro OR deputado OR eleições)",
-    "cultura": "(cultura OR cinema OR música OR show OR festival OR livro OR teatro OR exposição)",
+    "cultura": "(cultura OR cinema OR música OR show OR festival OR livro OR teatro OR exposição OR internacional OR mundo OR exterior)",
+    "cultura/mundo": "(cultura OR cinema OR música OR show OR festival OR livro OR teatro OR exposição OR internacional OR mundo OR exterior)",
 }
 
 DIAS_HISTORICO = 90  # janela de histórico padrão (3 meses)

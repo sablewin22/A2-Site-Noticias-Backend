@@ -272,10 +272,23 @@ header.top .tabs{margin-left:auto}
 }
 @media (max-width:760px){
   .hero-grid{grid-template-columns:minmax(0,1fr)}
-  .lens-stage{width:min(86vw,360px)}
+  .lens-stage{width:min(86vw,360px);aspect-ratio:10/3}
   .ll{font-size:.75rem}
+  /* celular: hero mais baixo para "Os mais cobertos" já aparecer na primeira tela */
+  .hero{padding-block:22px 14px}
+  .hero-grid{gap:20px!important}
+  .dest{padding-top:22px}
+  .dest .sec-head{margin-bottom:18px;gap:8px}
 }
 .dest{padding-block:clamp(40px,6vw,80px) clamp(56px,8vw,110px)}
+/* telas de notebook: hero mais baixo para "Os mais cobertos" aparecer na primeira tela */
+@media (min-width:761px){
+  .hero{padding-block:clamp(40px,8vh,88px) clamp(16px,3vh,40px)}
+  .lens-stage{aspect-ratio:2/1}
+  .dest{padding-top:clamp(28px,5vh,64px)}
+  .dest .sec-head{margin-bottom:clamp(18px,3vh,36px)}
+}
+@media (max-width:760px){.dest{padding-top:22px}}
 .dest .sec-head h2{font-size:calc(clamp(2.4rem,5.4vw,5rem) * var(--fs))}
 .dest .kick{display:block;margin-bottom:12px;font-size:.95rem;font-weight:700;color:var(--fg)}
 .dest-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:clamp(14px,1.6vw,22px)}

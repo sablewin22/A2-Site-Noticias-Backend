@@ -826,7 +826,7 @@ footer ul a:hover{color:var(--fg)}
       <li>Desenvolvido na FGV Comunicação</li><li>2026</li></ul>
       <h4 style="margin-top:22px">Orientação</h4><ul><li>Prof. Dr. Matheus Pestana</li></ul></div>
     <div><h4>Equipe</h4><ul>
-      <li>Jamilly Medeiros</li><li>João Vianna</li><li>Julia Cereja</li><li>Sabrina Azulay Lewin</li></ul></div>
+      <li>Jamilly Andrade de Medeiros</li><li>João Marcelo Dias Vianna</li><li>Júlia Cereja Meinhardt</li><li>Sabrina Azulay Lewin</li></ul></div>
   </div>
   <div class="foot-mark" aria-hidden="true">Entrelinhas</div>
 </div></footer>
@@ -890,7 +890,7 @@ const MOCK = {
     {id:"meio-ambiente", nome:"Meio ambiente", art:["y","c"]},
     {id:"saude", nome:"Saúde", art:["m","y"]},
     {id:"educacao", nome:"Educação", art:["y","c"]},
-    {id:"cultura", nome:"Cultura", art:["m","c"]},
+    {id:"cultura", nome:"Cultura/Mundo", art:["m","c"]},
     {id:"entretenimento", nome:"Entretenimento", art:["c","m"]},
     {id:"esporte", nome:"Esporte", art:["y","m"]}
   ],
@@ -1162,7 +1162,7 @@ const pacote=n=>_pacotes[n]||(_pacotes[n]=fetch("capas/k"+n+".json").then(r=>r.o
 function carregaFoto(el){const k=el.dataset.foto;if(!FOTOS_IDX[k])return;const im=el.querySelector("img");if(!im)return;im.onload=()=>{im.hidden=false};im.src="capas/"+k+".webp"}
 const fotoIO="IntersectionObserver" in window?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){fotoIO.unobserve(e.target);carregaFoto(e.target)}}),{rootMargin:"300px"}):null;
 new MutationObserver(()=>document.querySelectorAll("[data-foto]:not([data-obs])").forEach(el=>{el.dataset.obs="1";fotoIO?fotoIO.observe(el):carregaFoto(el)})).observe(document.body,{childList:true,subtree:true});
-const temaNome=id=>{if(!id)return "";const t=MOCK.temas.find(x=>x.id===id||(x.id==="cultura"&&id.startsWith("cultura")));return t?t.nome:(id.toLowerCase().includes("cultura")?"Cultura":id.charAt(0).toUpperCase()+id.slice(1))};
+const temaNome=id=>{if(!id)return "";const t=MOCK.temas.find(x=>x.id===id||(x.id==="cultura"&&id.startsWith("cultura")));return t?t.nome:(id.toLowerCase().includes("cultura")?"Cultura/Mundo":id.charAt(0).toUpperCase()+id.slice(1))};
 const portalNome=id=>MOCK.portais.find(p=>p.id===id).nome;
 const FILL=["fill1","fill2","fill3"], AV=["var(--a1)","var(--a2)","var(--a3)"];
 
@@ -2059,7 +2059,7 @@ function afterPortais(){
 const PASSOS=[
   {t:"Coletamos",
    d:"Buscamos as notícias de cinco portais no Google Notícias: G1, CNN Brasil, Metrópoles, Poder360 e Agência Brasil. As buscas são feitas por portal, por dia e por tema. De cada notícia guardamos título, portal, data e link.",
-   i:["Acompanhamos oito temas: política, economia, saúde, educação, meio ambiente, esporte, cultura e entretenimento.","A base é uma amostra ampla do que cada portal publicou, não a cobertura completa."]},
+   i:["Acompanhamos oito temas: política, economia, saúde, educação, meio ambiente, esporte, cultura/mundo e entretenimento.","A base é uma amostra ampla do que cada portal publicou, não a cobertura completa."]},
   {t:"Agrupamos",
    d:"Um modelo de linguagem treinado em português transforma cada título em um vetor que representa o seu significado. Títulos de portais diferentes com significado muito parecido, publicados em até 48 horas, formam um mesmo acontecimento.",
    i:["Não agrupamos por palavra-chave: \u201cjuros\u201d ou \u201cinflação\u201d aparecem em dezenas de fatos diferentes.","Só aparecem no site os acontecimentos cobertos por três ou mais portais."]},
@@ -2159,7 +2159,7 @@ function viewSobre(){
 
     <div class="about-grid" data-r><h2 class="D">O problema</h2><div>
       <p>Quem lê notícias costuma ver uma única versão de cada fato, escolhida por algoritmo ou por hábito. Fica difícil perceber como o mesmo acontecimento foi tratado em lugares diferentes, e o que nem foi noticiado.</p>
-      <p class="m">Os comparadores que existem usam sobretudo o eixo político, o que os torna polêmicos e pouco úteis em temas como saúde, esporte ou cultura. No Brasil, quase não há ferramentas assim, e a cobertura regional e independente costuma ficar invisível.</p></div></div>
+      <p class="m">Os comparadores que existem usam sobretudo o eixo político, o que os torna polêmicos e pouco úteis em temas como saúde, esporte ou cultura/mundo. No Brasil, quase não há ferramentas assim, e a cobertura regional e independente costuma ficar invisível.</p></div></div>
 
     <div class="about-grid" data-r><h2 class="D">Para quem</h2><div class="aud">
       <div class="fill1"><b>Quem se informa pelas redes</b><span>E quer sair da bolha de uma fonte só.</span></div>

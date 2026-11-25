@@ -71,6 +71,7 @@ def trecho(texto: str | None) -> str:
     """Início do texto, cortado no fim de uma frase quando possível."""
     if not texto:
         return ""
+    texto = re.sub(r'([^\.\!\?\:\;\,\-\s])\s*\n+\s*', r'\1. ', texto)
     t = re.sub(r"\s+", " ", texto).strip()
     t = RE_LEGENDA.sub("", t, count=1).strip()
     t = RE_CREDITO_AGENCIA.sub("", t, count=1).strip()

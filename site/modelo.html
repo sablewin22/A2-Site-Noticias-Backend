@@ -1,5 +1,8 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Entrelinhas</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -236,8 +239,10 @@ header.top .tabs{margin-left:auto}
 .pn-heat td.top{font-weight:800;box-shadow:inset 0 0 0 2px var(--c)}
 .pn-note{margin:12px 0 0;font-size:.85rem;color:var(--muted)}
 .pn-stack{display:flex;height:28px;border-radius:6px;overflow:hidden}
-.pn-stack i{display:grid;place-items:center;min-width:0;font-style:normal;font-size:.78rem;font-weight:700;overflow:hidden;white-space:nowrap}
-.pn-stack i+i{margin-left:2px}.pn-stack i.z{margin-left:0}
+.pn-stack i{display:grid;place-items:center;min-width:0;font-style:normal;font-size:clamp(.68rem,.8vw,.78rem);font-weight:700;overflow:hidden;white-space:nowrap;padding:0 1px}
+.pn-stack i+i{margin-left:2px}
+.pn-stack i.z{display:none!important}
+.st i[data-w="0"]{display:none!important}
 .pn-stack i{transition:width .7s cubic-bezier(.2,.8,.2,1),margin .7s cubic-bezier(.2,.8,.2,1)}
 .pn-crit-legend{transition:opacity .25s}
 .pn-srow{display:grid;grid-template-columns:minmax(84px,128px) minmax(0,1fr);gap:12px;align-items:center;font-size:.92rem}
@@ -554,8 +559,8 @@ button.r100{width:100%;border:0;background:transparent;text-align:left;padding:6
 button.r100:hover{background:var(--surface)}
 button.r100.dim{opacity:.32}
 button.r100.sel .rl{font-weight:800}
-.st i{position:relative;display:flex;align-items:center;overflow:hidden}
-.st i em{font-style:normal;font-size:.78rem;font-weight:700;padding-left:8px;white-space:nowrap}
+.st i{position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.st i em{font-style:normal;font-size:clamp(.68rem,.8vw,.78rem);font-weight:700;padding:0 2px;white-space:nowrap}
 .st i.seg0 em{color:var(--on1)}.st i.seg1 em{color:var(--on2)}.st i.seg2 em{color:var(--on3)}
 .tt-note{margin:0}
 .r100{display:grid;grid-template-columns:130px minmax(0,1fr) 28px;gap:14px;align-items:center}
@@ -1102,6 +1107,14 @@ aplicar();
 /* =====================================================================
    EFEITOS DE ROLAGEM
    ===================================================================== */
+function pontuarTrecho(t){
+  if(!t)return "";
+  let s=t.replace(/(\d{4})\s+([A-ZÁÉÍÓÚÂÊÎÔÛÃÕÇ])/g,"$1. $2")
+         .replace(/([a-záéíóúâêîôûãõç0-9])\s+(Em\s+dia|Nave|Sete|Milhares|Depois|Segundo|De\s+acordo|Com\s+isso)\b/g,"$1. $2")
+         .replace(/\s*\.\s*\./g,".");
+  if(!/[.!?…]$/.test(s))s+=".";
+  return s;
+}
 const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
 let toneIO, revIO, toneEls=[];
 function updateTone(){
@@ -1272,7 +1285,7 @@ function cardDestaque(s,i){
   const logos=ids.map(id=>LOGOS[id]?`<img src="${esc(LOGOS[id])}" alt="" title="${esc(portalNome(id))}">`:"").join("");
   // resumo: o trecho mais completo entre as notícias do acontecimento (texto dos próprios portais)
   const ns=MOCK.noticias[s.id]||[], base=ns.slice().sort((a,b)=>(b.trecho||"").length-(a.trecho||"").length)[0];
-  const resumo=base&&base.trecho?base.trecho:"";
+  const resumo=base&&base.trecho?pontuarTrecho(base.trecho):"";
   return `<a class="dest-flip pos${i}" href="#sub-${s.id}" data-r style="--d:${(i*.06).toFixed(2)}s" aria-label="${esc(s.titulo)}">
    <div class="flip-in">
     <div class="dest-card dc${i}${i<3?" ov":""} face">
@@ -1490,7 +1503,7 @@ function renderCols(){
   const tot=vis.length||1;
   const dots=c=>`<span class="conf">${Math.round(c*100)}% de confiança</span>`;
   const card=({n,r})=>`<article class="news"><div class="who"><b>${esc(portalNome(n.portal))}</b><span class="mono">${n.hora}</span></div>
-    <div class="body"><div><h4>${esc(n.titulo)}</h4><p>${esc(n.trecho)}</p></div>${marcaPortal(n.portal)}</div>
+    <div class="body"><div><h4>${esc(n.titulo)}</h4><p>${esc(pontuarTrecho(n.trecho))}</p></div>${marcaPortal(n.portal)}</div>
     <div class="bottom">${r.pendente?(n.opiniao?'<span class="conf">Opinião</span>':"<span></span>"):dots(r.confianca)}<a class="src" href="${esc(n.url)}" target="_blank" rel="noopener">Ler na fonte ↗</a></div></article>`;
   if(nc.length&&nc.every(x=>x.r.pendente)&&!B.some(b=>b.length)){
     $("#cols").innerHTML="";
@@ -1694,7 +1707,7 @@ function rowsCard(G,C,leg){
       <div class="rows100">${G.porTema.map(t=>{const q=pctOf(t.dist),n=t.dist.reduce((a,b)=>a+b,0);
         return `<button type="button" class="r100" data-pt="${t.id}" aria-label="Ver só ${esc(t.nome)}: ${n?C.opcoes.map((o,i)=>o+" "+q[i]+"%").join(", "):"sem notícias"}">
           <span class="rl">${esc(t.nome)}</span>
-          ${n?`<span class="st">${q.map((v,i)=>`<i class="seg${i}" style="width:0" data-w="${v}" data-tip="${esc(t.nome)} · ${esc(C.opcoes[i])}: ${t.dist[i]} ${t.dist[i]===1?"notícia":"notícias"} (${v}%)">${v>=18?`<em>${v}%</em>`:""}</i>`).join("")}</span>`:`<span class="st none">Sem notícias</span>`}
+          ${n?`<span class="st">${q.map((v,i)=>`<i class="seg${i}" style="width:0" data-w="${v}" data-tip="${esc(t.nome)} · ${esc(C.opcoes[i])}: ${t.dist[i]} ${t.dist[i]===1?"notícia":"notícias"} (${v===0&&t.dist[i]>0?"<1%":v+"%"})">${v>=5?`<em>${v}%</em>`:""}</i>`).join("")}</span>`:`<span class="st none">Sem notícias</span>`}
           <span class="rn">${n}</span></button>`}).join("")}</div>
       <p class="mono tt-note">Toque num tema para ver só ele.</p>
     </div>`;
@@ -2142,7 +2155,7 @@ function viewMetodologia(){
   </div></section>
   <section class="s" data-tone="light"><div class="wrap">
     <div class="nums">
-      ${DADOS?`<div data-r><b data-count="${DADOS.total_coletadas}">0</b><p>Notícias coletadas de ${MOCK.portais.length} portais, de ${fmtData(DADOS.periodo.inicio+"T12:00")} a ${fmtData(DADOS.periodo.fim+"T12:00")}.</p></div>
+      ${DADOS?`<div data-r><b data-count="${DADOS.total_coletadas}">0</b><p>Notícias desduplicadas de ${MOCK.portais.length} portais, de ${fmtData(DADOS.periodo.inicio+"T12:00")} a ${fmtData(DADOS.periodo.fim+"T12:00")}.</p></div>
       <div data-r style="--d:.1s"><b data-count="${DADOS.subtemas.length}">0</b><p>Acontecimentos cobertos por ${CONFIG.minPortais} ou mais portais.</p></div>`:""}
       <div data-r><b data-count="${Math.round(CONFIG.confiancaMinima*100)}" data-suf="%">0</b><p>Confiança mínima para entrar numa coluna.</p></div>
       <div data-r style="--d:.1s"><b data-count="${CONFIG.minPortais}" data-suf="+">0</b><p>Portais para um acontecimento aparecer.</p></div>
@@ -2255,7 +2268,10 @@ function barras(linhas,max,cor){
 }
 function pilha(vals,opcoes,tip){
   const t=vals.reduce((a,b)=>a+b,0)||1;
-  return `<div class="pn-stack">${vals.map((v,i)=>`<i class="${v?"":"z"}" style="width:${v/t*100}%;background:${AV[i]};color:${i===2?"var(--on3)":"var(--on1)"}" ${tipAttr(`${tip}: ${opcoes[i]}, ${Math.round(v/t*100)}% (${fmtN(v)})`)}>${v/t>=.12?Math.round(v/t*100)+"%":""}</i>`).join("")}</div>`;
+  return `<div class="pn-stack">${vals.map((v,i)=>{
+    const pct=Math.round(v/t*100), pctTxt=(v>0&&pct===0)?"<1%":(pct+"%");
+    return `<i class="${v?"":"z"}" style="width:${v?v/t*100:0}%;background:${AV[i]};color:${i===2?"var(--on3)":"var(--on1)"}" ${tipAttr(`${tip}: ${opcoes[i]}, ${pctTxt} (${fmtN(v)})`)}>${(v/t*100)>=5?pct+"%":""}</i>`
+  }).join("")}</div>`;
 }
 const legenda=opcoes=>`<div class="pn-legend">${opcoes.map((o,i)=>`<span style="--c:${AV[i]}">${esc(o)}</span>`).join("")}</div>`;
 const espera=(titulo,txt)=>`<div class="pn-wait"><b>${esc(titulo)}</b><span>${esc(txt)}</span></div>`;

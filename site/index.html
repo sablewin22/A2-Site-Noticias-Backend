@@ -1448,22 +1448,66 @@ function afterTemas(){
 /* =====================================================================
    TEMA — cartões que empilham na rolagem
    ===================================================================== */
+function renderBlocoSubs(bloco){
+  return `<div class="wrap pile">
+    ${bloco.map((s,i)=>`<a class="pcard" style="--i:${i}" href="#sub-${s.id}">
+      <div class="t"><span class="mono">Atualizado ${s.atualizado} · ${s.portais} portais</span><h2 class="D h2w">${esc(s.titulo)}</h2></div>
+      <div class="pb"><div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap"><span class="big">${s.noticias}</span><span class="mono" style="font-size:1rem">notícias</span></div>
+        ${foto(fotoSub(s.id),"Foto do acontecimento")}</div></a>`).join("")}
+  </div>`;
+}
+
+let currentTemaSubs=[], currentTemaLoaded=0;
+const TEMA_PAGE_SIZE=18;
+
 async function viewTema(id){
   const tema=MOCK.temas.find(t=>t.id===id); if(!tema) return notFound();
   /* mais recentes primeiro (data da notícia mais nova do acontecimento); empate: mais portais */
   const subs=(await Dados.subtemas(id)).slice().sort((a,b)=>String(b.data||"").localeCompare(String(a.data||""))||b.portais-a.portais);
+  currentTemaSubs=subs;
+  currentTemaLoaded=Math.min(subs.length, TEMA_PAGE_SIZE);
+  const inicial=subs.slice(0, currentTemaLoaded);
+  const blocos=Array.from({length:Math.ceil(inicial.length/6)},(_,b)=>inicial.slice(b*6,b*6+6));
+  const hasMore=subs.length>currentTemaLoaded;
+
   return `
   <section class="ph-head fxbg" id="fx-head" data-tone="light"><canvas class="halftone" aria-hidden="true"></canvas><div class="wrap">
     <div class="crumbs mono" data-r><a href="#temas">Temas</a><span>/</span><span>${esc(tema.nome)}</span></div>
     <h1 class="D" data-r>${esc(tema.nome)}</h1>
   </div></section>
-  <section data-tone="light">${Array.from({length:Math.ceil(subs.length/6)},(_,b)=>subs.slice(b*6,b*6+6)).map(bloco=>`<div class="wrap pile">
-    ${bloco.map((s,i)=>`<a class="pcard" style="--i:${i}" href="#sub-${s.id}">
-      <div class="t"><span class="mono">Atualizado ${s.atualizado} · ${s.portais} portais</span><h2 class="D h2w">${esc(s.titulo)}</h2></div>
-      <div class="pb"><div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap"><span class="big">${s.noticias}</span><span class="mono" style="font-size:1rem">notícias</span></div>
-        ${foto(fotoSub(s.id),"Foto do acontecimento")}</div></a>`).join("")}
-  </div>`).join("")}</section>
+  <section data-tone="light" id="tema-piles">
+    ${blocos.map(renderBlocoSubs).join("")}
+    <div id="tema-more-container"></div>
+    ${hasMore?`<div class="wrap" id="tema-load-box" style="text-align:center;padding:24px 0 64px">
+      <button type="button" id="tema-load-more" class="cta ghost" style="margin:auto;display:inline-flex;cursor:pointer">
+        Ver mais acontecimentos (${subs.length-currentTemaLoaded} restantes) ↓
+      </button>
+    </div>`:""}
+  </section>
   <section class="s" data-tone="light" style="padding-block:72px"><div class="wrap"><p class="mono" style="margin:0">Acontecimentos cobertos por menos de ${CONFIG.minPortais} portais ficam ocultos.</p></div></section>`;
+}
+
+function afterTema(){
+  try{halftone($("#fx-head"))}catch(e){}
+  const btn=$("#tema-load-more");
+  if(!btn) return;
+  btn.addEventListener("click",()=>{
+    const nextLoaded=Math.min(currentTemaSubs.length, currentTemaLoaded+TEMA_PAGE_SIZE);
+    const slice=currentTemaSubs.slice(currentTemaLoaded, nextLoaded);
+    currentTemaLoaded=nextLoaded;
+    const blocos=Array.from({length:Math.ceil(slice.length/6)},(_,b)=>slice.slice(b*6,b*6+6));
+    const moreBox=$("#tema-more-container");
+    if(moreBox){
+      moreBox.insertAdjacentHTML("beforeend", blocos.map(renderBlocoSubs).join(""));
+    }
+    const remaining=currentTemaSubs.length-currentTemaLoaded;
+    if(remaining>0){
+      btn.textContent=`Ver mais acontecimentos (${remaining} restantes) ↓`;
+    }else{
+      const loadBox=$("#tema-load-box");
+      if(loadBox) loadBox.remove();
+    }
+  });
 }
 
 /* =====================================================================
@@ -2412,7 +2456,7 @@ async function route(){
   const h=(location.hash||"#inicio").slice(1);
   let html, after=()=>{}, tab="inicio";
   if(h==="temas"){html=await viewTemas();after=afterTemas;tab="temas"}
-  else if(h.startsWith("tema-")){html=await viewTema(h.slice(5));after=()=>{try{halftone($("#fx-head"))}catch(e){}};tab="temas"}
+  else if(h.startsWith("tema-")){html=await viewTema(h.slice(5));after=afterTema;tab="temas"}
   else if(h.startsWith("sub-")){html=await viewSub(h.slice(4));after=afterSub;tab="temas"}
   else if(h==="portais"){html=await viewPortais();after=afterPortais;tab="portais"}
   else if(h==="divergencias"){html=viewCasosDiv();after=()=>{try{halftone($("#casosdiv-head"))}catch(e){}};tab="portais"}
@@ -2423,13 +2467,24 @@ async function route(){
   else {html=await viewInicio();after=afterInicio}
   const view=$("#view");
   // Troca de aba: a página atual desce e some, a nova sobe no lugar
+  const isMobile = matchMedia("(max-width:760px)").matches || /iPhone|iPad|iPod/i.test(navigator.userAgent);
   if(!reduce&&view.animate&&view.children.length){
-    await view.animate([{opacity:1,transform:"none"},{opacity:0,transform:"translateY(18px)"}],{duration:200,easing:"ease-in",fill:"forwards"}).finished.catch(()=>{});
+    if(isMobile){
+      await view.animate([{opacity:1},{opacity:0}],{duration:160,easing:"ease-in",fill:"forwards"}).finished.catch(()=>{});
+    }else{
+      await view.animate([{opacity:1,transform:"none"},{opacity:0,transform:"translateY(18px)"}],{duration:200,easing:"ease-in",fill:"forwards"}).finished.catch(()=>{});
+    }
   }
   window.scrollTo(0,0);
   view.innerHTML=html; after(); setupScroll();
   view.getAnimations&&view.getAnimations().forEach(a=>a.cancel());
-  if(!reduce&&view.animate)view.animate([{opacity:0,transform:"translateY(-14px)"},{opacity:1,transform:"none"}],{duration:480,easing:EASE});
+  if(!reduce&&view.animate){
+    if(isMobile){
+      view.animate([{opacity:0},{opacity:1}],{duration:260,easing:EASE});
+    }else{
+      view.animate([{opacity:0,transform:"translateY(-14px)"},{opacity:1,transform:"none"}],{duration:480,easing:EASE});
+    }
+  }
   $("#foot-met").hidden=tab==="metodologia";
   document.querySelectorAll("[data-tab]").forEach(a=>a.dataset.tab===tab?a.setAttribute("aria-current","page"):a.removeAttribute("aria-current"));
 }

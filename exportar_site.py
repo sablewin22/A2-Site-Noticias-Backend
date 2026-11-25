@@ -373,14 +373,8 @@ def main():
             subtemas[-1]["capa"] = capa
         noticias[sid] = itens
 
-    if existe(con, "pacote_info"):
-        # banco reduzido (preparar_pacote.py): período e total vêm do banco completo
-        info = dict(con.execute("SELECT chave, valor FROM pacote_info"))
-        periodo = (info["periodo_inicio"], info["periodo_fim"])
-        total_noticias = int(info["total_coletadas"])
-    else:
-        periodo = con.execute("SELECT MIN(dia_busca), MAX(dia_busca) FROM noticias").fetchone()
-        total_noticias = con.execute("SELECT COUNT(*) FROM noticias").fetchone()[0]
+    periodo = con.execute("SELECT MIN(dia_busca), MAX(dia_busca) FROM noticias WHERE dia_busca IS NOT NULL").fetchone()
+    total_noticias = con.execute("SELECT COUNT(*) FROM noticias").fetchone()[0]
     dados = {
         "gerado_em": datetime.now(BRASILIA).isoformat(timespec="seconds"),
         "periodo": {"inicio": periodo[0], "fim": periodo[1]},

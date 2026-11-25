@@ -82,7 +82,8 @@ header.top .tabs{margin-left:auto}
 .sgroup a{display:flex;justify-content:space-between;gap:16px;align-items:baseline;padding:14px 0;border-bottom:1px solid var(--line);text-decoration:none;font-size:1.2rem;font-weight:600}
 .sgroup a:hover,.sgroup a:focus-visible{color:var(--fg);padding-left:8px;transition:padding .2s}
 .sgroup a span{font-size:.85rem;font-weight:500;color:var(--muted);white-space:nowrap}
-.sgroup mark{background:var(--a1);color:var(--on1);border-radius:3px;padding:0 2px}
+.sgroup mark{background:var(--a1);color:var(--on1);border-radius:3px;padding:0 1px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.sgroup .stx{font-weight:inherit;min-width:0}
 .s-empty{color:var(--muted);font-size:1.1rem}
 @media (max-width:760px){header.top .wrap{gap:10px}.logo{margin-right:auto}}
 
@@ -498,7 +499,7 @@ header.top .tabs{margin-left:auto}
 .ocount{font-size:.75rem;font-weight:700;border-radius:999px;padding:2px 8px;background:var(--bg);color:var(--muted)}
 .oempty{margin:0;font-weight:600;font-size:.98rem}
 .omais{justify-self:start;margin-top:4px}
-.ph-head h1.fora-h1{white-space:nowrap;font-size:clamp(2rem,11.5vw,9rem)}
+.ph-head h1.fora-h1{white-space:normal;overflow-wrap:normal;font-size:clamp(2rem,11.5vw,9rem)}
 .ph-head h1.casos-h1{line-height:.95}
 .fora-rec{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 0}
 .fora-rec div{display:grid;gap:2px;padding:10px 18px;border-radius:16px;background:var(--surface)}
@@ -2083,7 +2084,7 @@ async function viewFora(){
     :`<p class="oempty">Todas as notícias seguem o padrão.</p>`;
   return `
   <section class="ph-head fxbg" id="fora-head" data-tone="light"><canvas class="halftone" aria-hidden="true"></canvas><div class="wrap">
-    <h1 class="D fora-h1" data-r>Fora do padrão</h1>
+    <h1 class="D fora-h1" data-r>Fora&nbsp;do padrão</h1>
     <dl class="fora-rec" data-r style="--d:.1s"><div><dt>Portal</dt><dd>${esc(p.nome)}</dd></div><div><dt>Critério</dt><dd>${esc(C.nome)}</dd></div><div><dt>Tema</dt><dd>${temaP==="todos"?"Todos os temas":esc(temaNome(temaP))}</dd></div></dl>
     <a class="cta ghost" href="#portais" style="position:relative;z-index:2;margin-top:18px">← Voltar para Portais</a>
   </div></section>
@@ -2519,7 +2520,7 @@ const FOTOS_TEMA={
 };
 /* ── Busca ── */
 const norm=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
-function hl(t,q){if(!q)return esc(t);const i=norm(t).indexOf(q);if(i<0)return esc(t);return esc(t.slice(0,i))+"<mark>"+esc(t.slice(i,i+q.length))+"</mark>"+esc(t.slice(i+q.length))}
+function hl(t,q){const w=x=>`<b class="stx">${x}</b>`;if(!q)return w(esc(t));const i=norm(t).indexOf(q);if(i<0)return w(esc(t));return w(esc(t.slice(0,i))+"<mark>"+esc(t.slice(i,i+q.length))+"</mark>"+esc(t.slice(i+q.length)))}
 async function runSearch(){
   const raw=$("#search-q").value.trim(), q=norm(raw), out=$("#search-res");
   const subs=await Dados.subtemas();
